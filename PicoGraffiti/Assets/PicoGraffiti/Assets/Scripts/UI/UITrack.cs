@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace PicoGraffiti.UI
 {
-    public class UITrack : TunaBehaviour ,IPointerDownHandler, IPointerUpHandler, IDragHandler
+    public class UITrack : TunaBehaviour
     {
         [SerializeField] private RawImage _image = null;
         [SerializeField] private Color _noteColor;
@@ -21,7 +21,6 @@ namespace PicoGraffiti.UI
         private Texture2D _texture = null;
         private int _offsetX = 0;
         private int _offsetY = 0;
-        private Vector2 _prevPos;
 
         public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
 
@@ -34,31 +33,6 @@ namespace PicoGraffiti.UI
             _image.texture = _texture;
             
             Clear();
-        }
-        
-        public void OnPointerDown(PointerEventData eventData)
-        {
-            OnPointerEvent.Invoke(eventData.position);
-            _prevPos = eventData.position;
-        }
-
-        public void OnPointerUp(PointerEventData eventData)
-        {
-            
-        }
-
-        public void OnDrag(PointerEventData eventData)
-        {
-            var move = eventData.position - _prevPos;
-            var dir = move.normalized;
-            var pos = _prevPos;
-            for (var i = 0; i < Mathf.CeilToInt(move.magnitude); i++)
-            {
-                OnPointerEvent.Invoke(pos);
-                pos += dir;
-            }
-
-            _prevPos = eventData.position;
         }
 
         public void Write(int index, double melo)

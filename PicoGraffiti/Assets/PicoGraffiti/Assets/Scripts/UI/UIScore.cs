@@ -5,10 +5,11 @@ using PicoGraffiti.Model;
 using Tuna;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 namespace PicoGraffiti.UI
 {
-    public class UIScore : TunaBehaviour
+    public class UIScore : TunaBehaviour ,IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
         [SerializeField] private Transform _tracks = null;
 
@@ -16,6 +17,7 @@ namespace PicoGraffiti.UI
         public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
+        private Vector2 _prevPos;
 
         public async UniTask InitializeAsync()
         {
@@ -30,7 +32,7 @@ namespace PicoGraffiti.UI
             uiTrack.Instance.OnPointerEvent.Subscribe(OnPointerEvent.Invoke).AddTo(_subscribers);
         }
 
-        public async void UpdateFrame()
+        public void UpdateFrame()
         {
             foreach (var uiTrack in UITracks)
             {
@@ -46,6 +48,31 @@ namespace PicoGraffiti.UI
                 uiTrack.Value.Dispose();
             }
             UITracks.Clear();
+        }
+        
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            OnPointerEvent.Invoke(eventData.position);
+            _prevPos = eventData.position;
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            var move = eventData.position - _prevPos;
+            var dir = move.normalized;
+            var pos = _prevPos;
+            for (var i = 0; i < Mathf.CeilToInt(move.magnitude); i++)
+            {
+                OnPointerEvent.Invoke(pos);
+                pos += dir;
+            }
+
+            _prevPos = eventData.position;
         }
     }
 }
