@@ -52,6 +52,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _tracks: {fileID: 7136755906108100583}
+  _noteColors:
+  - {r: 1, g: 0.8099653, b: 0.11006278, a: 1}
+  - {r: 1, g: 0.39107898, b: 0.109803915, a: 1}
+  - {r: 0.109803915, g: 0.7885273, b: 1, a: 1}
+  - {r: 0.70007855, g: 0.65723264, b: 1, a: 1}
+  - {r: 0.4039216, g: 1, b: 0.6347754, a: 1}
 --- !u!222 &8204703783210206385
 CanvasRenderer:
   m_ObjectHideFlags: 0

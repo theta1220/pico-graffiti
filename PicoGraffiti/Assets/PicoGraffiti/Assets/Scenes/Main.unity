@@ -175,7 +175,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
-  m_DragThreshold: 10
+  m_DragThreshold: 1
 --- !u!4 &378465206
 Transform:
   m_ObjectHideFlags: 0
@@ -200,6 +200,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1203119288}
   - component: {fileID: 1203119287}
+  - component: {fileID: 1203119289}
   m_Layer: 0
   m_Name: Main
   m_TagString: Untagged
@@ -233,3 +234,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1203119289
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1203119286}
+  m_Enabled: 1

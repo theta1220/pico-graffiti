@@ -11,13 +11,27 @@ namespace PicoGraffiti.UI
 {
     public class UIScore : TunaBehaviour ,IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
+        private enum State
+        {
+            None,
+            Write,
+            Erase,
+            Move,
+        }
+        
         [SerializeField] private Transform _tracks = null;
+        [SerializeField] private List<Color> _noteColors = null;
 
         public Dictionary<Track, Tuna.Object<UITrack>> UITracks { get; private set; }
-        public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
+        public UnityEvent<Vector2> OnWriteEvent { get; private set; } = new UnityEvent<Vector2>();
+        public UnityEvent<Vector2> OnEraseEvent { get; private set; } = new UnityEvent<Vector2>();
+        public UnityEvent<Vector2> OnWriteEndEvent { get; private set; } = new UnityEvent<Vector2>();
+        public UnityEvent<Vector2> OnMoveEvent { get; private set; } = new UnityEvent<Vector2>();
+        public Vector2 PrevPos { get; private set; }
+        public List<Color> NoteColors => _noteColors;
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
-        private Vector2 _prevPos;
+        private State _state = State.Write;
 
         public async UniTask InitializeAsync()
         {
@@ -29,11 +43,16 @@ namespace PicoGraffiti.UI
             var uiTrack = await Tuna.Object<UITrack>.Create(_tracks);
             UITracks[track] = uiTrack;
             await uiTrack.Instance.InitializeAsync();
-            uiTrack.Instance.OnPointerEvent.Subscribe(OnPointerEvent.Invoke).AddTo(_subscribers);
+            uiTrack.Instance.OnPointerEvent.Subscribe(OnWriteEvent.Invoke).AddTo(_subscribers);
         }
 
         public void UpdateFrame()
         {
+            if (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)) _state = State.Move;
+            else if (Input.GetMouseButton(0)) _state = State.Write;
+            else if (Input.GetMouseButton(1)) _state = State.Erase;
+            else _state = State.None;
+            
             foreach (var uiTrack in UITracks)
             {
                 uiTrack.Value.Instance.UpdateFrame();
@@ -52,27 +71,55 @@ namespace PicoGraffiti.UI
         
         public void OnPointerDown(PointerEventData eventData)
         {
-            OnPointerEvent.Invoke(eventData.position);
-            _prevPos = eventData.position;
+            PrevPos = eventData.position;
+            OnDrag(eventData);
+            if (_state == State.Write) OnWriteEvent.Invoke(PrevPos);
+            else if (_state == State.Erase) OnEraseEvent.Invoke(PrevPos);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            
+            OnWriteEndEvent.Invoke(eventData.position);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            var move = eventData.position - _prevPos;
-            var dir = move.normalized;
-            var pos = _prevPos;
-            for (var i = 0; i < Mathf.CeilToInt(move.magnitude); i++)
+            switch (_state)
             {
-                OnPointerEvent.Invoke(pos);
-                pos += dir;
+                case State.Write:
+                {
+                    var move = eventData.position - PrevPos;
+                    var dir = move.normalized;
+                    var pos = PrevPos;
+                    for (var i = 0; i < Mathf.CeilToInt(move.magnitude) * 10; i++)
+                    {
+                        OnWriteEvent.Invoke(pos);
+                        pos += dir / 10;
+                    }
+                    Debug.Log("write");
+                    break;
+                }
+                case State.Erase:
+                {
+                    var move = eventData.position - PrevPos;
+                    var dir = move.normalized;
+                    var pos = PrevPos;
+                    for (var i = 0; i < Mathf.CeilToInt(move.magnitude) * 10; i++)
+                    {
+                        OnEraseEvent.Invoke(pos);
+                        pos += dir / 10;
+                    }
+                    Debug.Log("erase");
+                    break;
+                }
+                case State.Move:
+                {
+                    OnMoveEvent.Invoke(eventData.position);
+                    break;
+                }
             }
 
-            _prevPos = eventData.position;
+            PrevPos = eventData.position;
         }
     }
 }

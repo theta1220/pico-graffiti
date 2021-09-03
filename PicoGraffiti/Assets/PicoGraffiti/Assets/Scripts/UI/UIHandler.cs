@@ -10,28 +10,25 @@ namespace PicoGraffiti.UI
     {
         public Tuna.Object<UIMain> UIMain { get; private set; }
         public Tuna.Object<UIScore> UIScore { get; private set; }
-
-        public UnityEvent<Vector2> OnPointerEvent = new UnityEvent<Vector2>();
-        
-        private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
+        public Tuna.Object<UILines> UILines { get; private set; }
 
         public async UniTask InitializeAsync()
         {
             UIMain = await Tuna.Object<UIMain>.Create();
+            UILines = await Tuna.Object<UILines>.Create(UIMain.Instance.Root);
+            await UILines.Instance.InitializeAsync();
             UIScore = await Tuna.Object<UIScore>.Create(UIMain.Instance.Root);
             await UIScore.Instance.InitializeAsync();
-
-            UIScore.Instance.OnPointerEvent.Subscribe(OnPointerEvent.Invoke).AddTo(_subscribers);
         }
 
         public void UpdateFrame()
         {
             UIScore.Instance.UpdateFrame();
+            UILines.Instance.UpdateFrame();
         }
 
         public void Dispose()
         {
-            _subscribers.Dispose();
             UIMain.Dispose();
             UIScore.Dispose();
         }
