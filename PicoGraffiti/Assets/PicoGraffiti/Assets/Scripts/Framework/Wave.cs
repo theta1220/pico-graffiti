@@ -10,6 +10,7 @@ using Random = UnityEngine.Random;
 
 namespace PicoGraffiti.Framework
 {
+    [Serializable]
     public class Wave
     {
         public const uint SAMPLE_RATE = 44100;

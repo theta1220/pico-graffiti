@@ -1,24 +1,31 @@
-﻿using PicoGraffiti.Framework;
+﻿using System;
+using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using Tuna.Framework;
+using UnityEngine;
 
 namespace PicoGraffiti
 {
+    [Serializable]
     public class ScoreRepository
     {
+        public string Version { get; private set; }
+        public Identity Identity { get; private set; }
         public Score Score { get; private set; } = new Score();
         public Track CurrentTrack { get; private set; } = null;
 
-        public void Initialize()
+        public ScoreRepository()
         {
-            var track = new Track(Score, WaveType.Square25);
+            Version = Application.version;
+            Identity = new Identity();
+            var track = new Track(Identity.Get(), Score, WaveType.Square25);
             Score.Tracks.Add(track);
             CurrentTrack = track;
             
-            Score.Tracks.Add(new Track(Score, WaveType.Square25));
-            Score.Tracks.Add(new Track(Score, WaveType.Square));
-            Score.Tracks.Add(new Track(Score, WaveType.Noise));
-            Score.Tracks.Add(new Track(Score, WaveType.Noise2));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Noise));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Noise2));
         }
 
         public void SetNextTrack()

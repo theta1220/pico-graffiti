@@ -19,7 +19,7 @@ namespace PicoGraffiti.UI
         {
             _wave = new Wave();
             _wave.Initialize();;
-            _touchNote = new Note();
+            _touchNote = new Note(0);
         }
 
         public void Play(Score score, long offset)

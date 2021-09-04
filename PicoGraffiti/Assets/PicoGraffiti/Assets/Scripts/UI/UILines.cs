@@ -85,7 +85,7 @@ namespace PicoGraffiti.UI
                     pos += Width;
                 }
                 _texture.SetPixels(pos - offset, 0, 1, Height, _lineColorsH);
-                if (count % 2 == 0)
+                if (count % 2 == 0 && pos - offset + 1 < Width)
                 {
                     _texture.SetPixels(pos - offset + 1, 0, 1, Height, _lineColorsH);
                 }

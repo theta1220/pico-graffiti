@@ -1,7 +1,9 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using PicoGraffiti.UI;
+using Stocker.Framework;
 using Tuna;
 using Tuna.Framework;
 using UnityEngine;
@@ -10,11 +12,12 @@ namespace PicoGraffiti.Assets.Scripts
 {
     public class Main : MonoBehaviour
     {
-        public ScoreRepository ScoreRepository { get; private set; }
+        public Stocker.Framework.Version<ScoreRepository> ScoreRepository { get; private set; }
         public UIHandler UIHandler { get; private set; }
         public Tuna.Object<UIWavePlayer> UIWavePlayer { get; private set; }
+        public SaveDataManager SaveDataManager { get; private set; }
 
-        private UITrack _CurrentTrack => UIHandler.UIScore.Instance.UITracks[ScoreRepository.CurrentTrack]?.Instance;
+        private UITrack _CurrentTrack => UIHandler.UIScore.Instance.UITracks[ScoreRepository.Instance.CurrentTrack.Id]?.Instance;
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
 
@@ -27,8 +30,8 @@ namespace PicoGraffiti.Assets.Scripts
         {
             ResourceManager.Instance.Initialize();
 
-            ScoreRepository = new ScoreRepository();
-            ScoreRepository.Initialize();
+            ScoreRepository = new Version<ScoreRepository>();
+            SaveDataManager = new SaveDataManager();
 
             UIHandler = new UIHandler();
             await UIHandler.InitializeAsync();
@@ -36,15 +39,16 @@ namespace PicoGraffiti.Assets.Scripts
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
             UIWavePlayer.Instance.Initialize();
 
-            for (var i = 0; i < ScoreRepository.Score.Tracks.Count; i++)
+            for (var i = 0; i < ScoreRepository.Instance.Score.Tracks.Count; i++)
             {
-                await UIHandler.UIScore.Instance.CreateTrackAsync(ScoreRepository.Score.Tracks[i]);
-                UIHandler.UIScore.Instance.UITracks[ScoreRepository.Score.Tracks[i]].Instance
+                await UIHandler.UIScore.Instance.CreateTrackAsync(ScoreRepository.Instance.Score.Tracks[i]);
+                UIHandler.UIScore.Instance.UITracks[ScoreRepository.Instance.Score.Tracks[i].Id].Instance
                     .SetNoteColor(UIHandler.UIScore.Instance.NoteColors[i]);
             }
             
             UIHandler.UIScore.Instance.OnWriteEvent.Subscribe(OnWriteEvent).AddTo(_subscribers);
-            UIHandler.UIScore.Instance.OnWriteEndEvent.Subscribe(OnWriteEndEvent).AddTo(_subscribers);
+            UIHandler.UIScore.Instance.OnWriteOrEraseStartEvent.Subscribe(OnWriteOrEraseStartEvent).AddTo(_subscribers);
+            UIHandler.UIScore.Instance.OnWriteOrEraseEndEvent.Subscribe(OnWriteOrEraseEndEvent).AddTo(_subscribers);
             UIHandler.UIScore.Instance.OnEraseEvent.Subscribe(OnEraseEvent).AddTo(_subscribers);
             UIHandler.UIScore.Instance.OnMoveEvent.Subscribe(OnMoveEvent).AddTo(_subscribers);
             
@@ -69,7 +73,32 @@ namespace PicoGraffiti.Assets.Scripts
             // UITrack切り替え
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                ScoreRepository.SetNextTrack();
+                ScoreRepository.Instance.SetNextTrack();
+            }
+            
+            // Undo Redo
+            if (Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)))
+            {
+                ScoreRepository.Redo();
+                ScoreApply();
+            }
+            else if (Input.GetKeyDown(KeyCode.Z))
+            {
+                ScoreRepository.Undo();
+                ScoreApply();
+            }
+            
+            // ファイル
+            if (Input.GetKeyDown(KeyCode.I))
+            {
+                ScoreRepository.SetInstance(SaveDataManager.Load());
+                ScoreApply();
+            }
+
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                SaveDataManager.Save(ScoreRepository.Instance);
+                ScoreApply();
             }
 
             // 再生
@@ -83,11 +112,11 @@ namespace PicoGraffiti.Assets.Scripts
                 {
                     if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     {
-                        UIWavePlayer.Instance.Play(ScoreRepository.Score, 0);
+                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, 0);
                     }
                     else
                     {
-                        UIWavePlayer.Instance.Play(ScoreRepository.Score, _offset * Track.NoteGridSize);
+                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, _offset * Track.NOTE_GRID_SIZE);
                     }
                 }
             }
@@ -98,16 +127,21 @@ namespace PicoGraffiti.Assets.Scripts
             var index = (int) (pos.x + _offset);
             var melo = (double) pos.y / _CurrentTrack.Height;
             var vol = _ink;
-            ScoreRepository.CurrentTrack.SetNote(index, melo, vol);
+            ScoreRepository.Instance.CurrentTrack.SetNote(ScoreRepository.Instance.Identity.Get(), index, melo, vol);
             _ink -= _inkDecay;
             if (_ink < 0) _ink = 0;
             _CurrentTrack.Erase(index - _offset);
             _CurrentTrack.Write(index - _offset, melo, vol);
 
-            UIWavePlayer.Instance.OnWrite(melo, ScoreRepository.CurrentTrack.WaveType);
+            UIWavePlayer.Instance.OnWrite(melo, ScoreRepository.Instance.CurrentTrack.WaveType);
         }
 
-        public void OnWriteEndEvent(Vector2 pos)
+        public void OnWriteOrEraseStartEvent(Vector2 pos)
+        {
+            ScoreRepository.Commit();
+        }
+
+        public void OnWriteOrEraseEndEvent(Vector2 pos)
         {
             _ink = 1.0;
             UIWavePlayer.Instance.OnWriteOff();
@@ -116,7 +150,7 @@ namespace PicoGraffiti.Assets.Scripts
         public void OnEraseEvent(Vector2 pos)
         {
             var index = (int) (pos.x + _offset);
-            ScoreRepository.CurrentTrack.RemoveNote(index);
+            ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
             _CurrentTrack.Erase(index - _offset);
         }
 
@@ -124,10 +158,15 @@ namespace PicoGraffiti.Assets.Scripts
         {
             _offset -= (int) (dir.x - UIHandler.UIScore.Instance.PrevPos.x);
             if (_offset < 0) _offset = 0;
+            ScoreApply();
+            UIHandler.UILines.Instance.OnMove(_offset);
+        }
 
-            foreach (var track in ScoreRepository.Score.Tracks)
+        public void ScoreApply()
+        {
+            foreach (var track in ScoreRepository.Instance.Score.Tracks)
             {
-                var uiTrack = UIHandler.UIScore.Instance.UITracks[track].Instance;
+                var uiTrack = UIHandler.UIScore.Instance.UITracks[track.Id].Instance;
                 uiTrack.Clear();
                 for (var i = _offset; i < _CurrentTrack.Width + _offset; i++)
                 {
@@ -138,8 +177,6 @@ namespace PicoGraffiti.Assets.Scripts
                     }
                 }
             }
-
-            UIHandler.UILines.Instance.OnMove(_offset);
         }
     }
 }
