@@ -33,7 +33,8 @@ namespace PicoGraffiti.Model
             {
                 note = Notes[index];
             }
-            else {
+            else
+            {
                 Notes[index] = new Note(id);
                 note = Notes[index];
             }
@@ -60,6 +61,7 @@ namespace PicoGraffiti.Model
 
         public int GetSize()
         {
+            if (Notes.Count == 0) return 0;
             return Notes.Last().Key;
         }
     }

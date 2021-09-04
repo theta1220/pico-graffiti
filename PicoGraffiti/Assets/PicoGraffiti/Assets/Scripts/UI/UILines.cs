@@ -16,9 +16,10 @@ namespace PicoGraffiti.UI
         private Color[] _lineColorsW = null;
         private Color[] _lineColorsH = null;
         private Color[] _lineColorsS = null;
-        
-        public int Width { get; private set; }
-        public int Height { get; private set; }
+        private Color[] _textureBuffer = null;
+
+        public int Width = 0;
+        public int Height = 0;
 
         private int _offset = 0;
         private bool _moved = false;
@@ -26,11 +27,12 @@ namespace PicoGraffiti.UI
         public async UniTask InitializeAsync()
         {
             var rect = _image.rectTransform;
-            Width = (int)rect.rect.width;
-            Height = (int)rect.rect.height;
+            Width = (int)rect.rect.width / UIScore.SCALE;
+            Height = (int)rect.rect.height / UIScore.SCALE;
             
             _texture = new Texture2D(Width, Height);
             _texture.wrapMode = TextureWrapMode.Repeat;
+            _texture.filterMode = FilterMode.Point;
             _image.texture = _texture;
 
             _lineColorsW = new Color[Width];
@@ -46,17 +48,24 @@ namespace PicoGraffiti.UI
                 _lineColorsH[i] = _lineColorH;
             }
 
+            var len = Width * Height;
+            _textureBuffer = new Color[len];
+            for (var i = 0; i < len; i++)
+            {
+                _textureBuffer[i] = Color.clear;
+            }
+
             Write();
+            _moved = true;
         }
 
         public void Write()
         {
-            var all = new Color[Width * Height];
-            for (var i = 0; i < Width * Height; i++)
+            var len = Width * Height;
+            for (var i = 0; i < len; i++)
             {
-                all[i] = Color.clear;
+                _textureBuffer[i].a = 0;
             }
-            _texture.SetPixels(0, 0, Width, Height, all);
             
             var count = 0;
             var wSplit = Width / 32;
@@ -66,11 +75,25 @@ namespace PicoGraffiti.UI
             {
                 if (isSharp(count))
                 {
-                    _texture.SetPixels(0, y + 1, Width, 1, _lineColorsS);
+                    for (var i = 0; i < Width; i++)
+                    {
+                        _textureBuffer[i + (y + 1) * Width].r = _lineColorS.r;
+                        _textureBuffer[i + (y + 1) * Width].g = _lineColorS.g;
+                        _textureBuffer[i + (y + 1) * Width].b = _lineColorS.b;
+                        _textureBuffer[i + (y + 1) * Width].a = _lineColorS.a;
+                    }
+                    // _texture.SetPixels(0, y + 1, Width, 1, _lineColorsS);
                 }
                 else
                 {
-                    _texture.SetPixels(0, y, Width, 1, _lineColorsW);
+                    for (var i = 0; i < Width; i++)
+                    {
+                        _textureBuffer[i + y * Width].r = _lineColorW.r;
+                        _textureBuffer[i + y * Width].g = _lineColorW.g;
+                        _textureBuffer[i + y * Width].b = _lineColorW.b;
+                        _textureBuffer[i + y * Width].a = _lineColorW.a;
+                    }
+                    // _texture.SetPixels(0, y, Width, 1, _lineColorsW);
                 }
 
                 count++;
@@ -84,15 +107,28 @@ namespace PicoGraffiti.UI
                 {
                     pos += Width;
                 }
-                _texture.SetPixels(pos - offset, 0, 1, Height, _lineColorsH);
+                for (var i = 0; i < Height; i++)
+                {
+                    _textureBuffer[pos - offset + i * Width].r = _lineColorH.r;
+                    _textureBuffer[pos - offset + i * Width].g = _lineColorH.g;
+                    _textureBuffer[pos - offset + i * Width].b = _lineColorH.b;
+                    _textureBuffer[pos - offset + i * Width].a = _lineColorH.a;
+                }
+                // _texture.SetPixels(pos - offset, 0, 1, Height, _lineColorsH);
                 if (count % 2 == 0 && pos - offset + 1 < Width)
                 {
-                    _texture.SetPixels(pos - offset + 1, 0, 1, Height, _lineColorsH);
+                    for (var i = 0; i < Height; i++)
+                    {
+                        _textureBuffer[(pos - offset + 1) + i * Width].r = _lineColorH.r;
+                        _textureBuffer[(pos - offset + 1) + i * Width].g = _lineColorH.g;
+                        _textureBuffer[(pos - offset + 1) + i * Width].b = _lineColorH.b;
+                        _textureBuffer[(pos - offset + 1) + i * Width].a = _lineColorH.a;
+                    }
+                    // _texture.SetPixels(pos - offset + 1, 0, 1, Height, _lineColorsH);
                 }
 
                 count++;
             }
-            _texture.Apply();
         }
 
         private bool isSharp(int melo)
@@ -105,6 +141,7 @@ namespace PicoGraffiti.UI
         {
             if (_moved)
             {
+                _texture.SetPixels(_textureBuffer);
                 _texture.Apply();
                 _moved = false;
             }

@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEditorInternal.Profiling.Memory.Experimental;
 
 namespace PicoGraffiti.Framework
 {
@@ -7,7 +6,6 @@ namespace PicoGraffiti.Framework
     public class Identity
     {
         private ulong _count = 0;
-
         public ulong Get()
         {
             _count++;

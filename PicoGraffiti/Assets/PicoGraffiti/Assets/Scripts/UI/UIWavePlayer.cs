@@ -12,13 +12,13 @@ namespace PicoGraffiti.UI
         private Score _score = null;
         private Wave _wave = null;
         private Note _touchNote = null;
-
         public bool IsPlaying => _start;
+        public long Index => _index;
 
         public void Initialize()
         {
             _wave = new Wave();
-            _wave.Initialize();;
+            _wave.Initialize();
             _touchNote = new Note(0);
         }
 

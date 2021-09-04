@@ -32,5 +32,10 @@ namespace PicoGraffiti
         {
             CurrentTrack = Score.Tracks[(Score.Tracks.IndexOf(CurrentTrack) + 1) % Score.Tracks.Count];
         }
+
+        public void SetCurrentTrack(int index)
+        {
+            CurrentTrack = Score.Tracks[index];
+        }
     }
 }

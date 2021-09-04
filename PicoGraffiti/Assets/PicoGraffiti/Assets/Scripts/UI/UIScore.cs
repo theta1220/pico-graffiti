@@ -7,6 +7,7 @@ using Tuna;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace PicoGraffiti.UI
 {
@@ -19,6 +20,8 @@ namespace PicoGraffiti.UI
             Erase,
             Move,
         }
+
+        public const int SCALE = 2;
         
         [SerializeField] private Transform _tracks = null;
         [SerializeField] private List<Color> _noteColors = null;
@@ -34,10 +37,24 @@ namespace PicoGraffiti.UI
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
         private State _state = State.Write;
+        private RectTransform _rectTransform;
+        private RawImage _image;
+        private Texture2D _texture;
+        private bool _isUpdateTexture = false;
 
         public async UniTask InitializeAsync()
         {
             UITracks = new Dictionary<ulong, Object<UITrack>>();
+            _rectTransform = GetComponent<RectTransform>();
+            _image = GetComponent<RawImage>();
+            var width = (int) _rectTransform.rect.width / SCALE;
+            var height = (int) _rectTransform.rect.height / SCALE;
+            _texture = new Texture2D(width, height);
+            _texture.filterMode = FilterMode.Point;
+            _image.texture = _texture;
+            UITracks.Clear();
+            UITrack.InitializeTextureBuffer(width, height);
+            UpdateTexture();
         }
 
         public async UniTask CreateTrackAsync(Track track)
@@ -50,10 +67,15 @@ namespace PicoGraffiti.UI
 
         public void UpdateFrame()
         {
-            
             foreach (var uiTrack in UITracks)
             {
                 uiTrack.Value.Instance.UpdateFrame();
+            }
+
+            if (_isUpdateTexture && UITrack.TextureBuffer != null)
+            {
+                _texture.SetPixels(UITrack.TextureBuffer);
+                _texture.Apply();
             }
         }
 
@@ -76,8 +98,8 @@ namespace PicoGraffiti.UI
                 else if (Input.GetMouseButtonDown(1)) _state = State.Erase;
             }
             
-            if(_state == State.Write || _state == State.Erase) OnWriteOrEraseStartEvent.Invoke(eventData.position);
-            PrevPos = eventData.position;
+            if(_state == State.Write || _state == State.Erase) OnWriteOrEraseStartEvent.Invoke(GetTouchPosition(eventData));
+            PrevPos = GetTouchPosition(eventData);
             OnDrag(eventData);
             if (_state == State.Write) OnWriteEvent.Invoke(PrevPos);
             else if (_state == State.Erase) OnEraseEvent.Invoke(PrevPos);
@@ -91,11 +113,12 @@ namespace PicoGraffiti.UI
 
         public void OnDrag(PointerEventData eventData)
         {
+            var touchPos = GetTouchPosition(eventData);
             switch (_state)
             {
                 case State.Write:
                 {
-                    var move = eventData.position - PrevPos;
+                    var move = touchPos - PrevPos;
                     var dir = move.normalized;
                     var pos = PrevPos;
                     for (var i = 0; i < Mathf.CeilToInt(move.magnitude) * 10; i++)
@@ -107,7 +130,7 @@ namespace PicoGraffiti.UI
                 }
                 case State.Erase:
                 {
-                    var move = eventData.position - PrevPos;
+                    var move = touchPos - PrevPos;
                     var dir = move.normalized;
                     var pos = PrevPos;
                     for (var i = 0; i < Mathf.CeilToInt(move.magnitude) * 10; i++)
@@ -119,12 +142,24 @@ namespace PicoGraffiti.UI
                 }
                 case State.Move:
                 {
-                    OnMoveEvent.Invoke(eventData.position);
+                    OnMoveEvent.Invoke(touchPos);
                     break;
                 }
             }
 
-            PrevPos = eventData.position;
+            PrevPos = touchPos;
+        }
+
+        public Vector2 GetTouchPosition(PointerEventData eventData)
+        {
+            var touchPos = Vector2.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventData.position, Camera.main, out touchPos);
+            return touchPos / SCALE;
+        }
+
+        public void UpdateTexture()
+        {
+            _isUpdateTexture = true;
         }
     }
 }

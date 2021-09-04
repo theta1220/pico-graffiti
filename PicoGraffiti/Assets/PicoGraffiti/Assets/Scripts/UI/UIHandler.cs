@@ -15,9 +15,9 @@ namespace PicoGraffiti.UI
         public async UniTask InitializeAsync()
         {
             UIMain = await Tuna.Object<UIMain>.Create();
-            UILines = await Tuna.Object<UILines>.Create(UIMain.Instance.Root);
+            UILines = await Tuna.Object<UILines>.Create(UIMain.Instance.Content);
             await UILines.Instance.InitializeAsync();
-            UIScore = await Tuna.Object<UIScore>.Create(UIMain.Instance.Root);
+            UIScore = await Tuna.Object<UIScore>.Create(UILines.Instance.transform);
             await UIScore.Instance.InitializeAsync();
         }
 

@@ -34,5 +34,13 @@ namespace PicoGraffiti.Framework
                 fs.Close();
             }
         }
+
+        public void Export(ScoreRepository scoreRepository)
+        {
+            var path = StandaloneFileBrowser.SaveFilePanel("Save", Application.persistentDataPath, "", "wav");
+            if (string.IsNullOrEmpty(path)) return;
+            
+            Wave.Save(scoreRepository.Score, path);
+        }
     }
 }

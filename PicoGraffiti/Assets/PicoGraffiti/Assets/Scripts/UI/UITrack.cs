@@ -12,73 +12,68 @@ namespace PicoGraffiti.UI
 {
     public class UITrack : TunaBehaviour
     {
-        [SerializeField] private RawImage _image = null;
         [SerializeField] private Color _noteColor;
-        
-        public int Width { get; private set; }
-        public int Height { get; private set; }
-        
-        private RectTransform _rectTransform = null;
-        private Texture2D _texture = null;
-        private Color[] _clearColors = null;
-        private Color[] _fillClearColors = null;
+
+        public static int Width = 0;
+        public static int Height = 0;
+
+        public static Color[] TextureBuffer = null;
+        private bool _isUpdateTexture = false;
 
         public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
 
         public async UniTask InitializeAsync()
         {
-            _rectTransform = _image.GetComponent<RectTransform>();
-            Width = (int)_rectTransform.rect.width;
-            Height = (int) _rectTransform.rect.height;
-            _texture = new Texture2D(Width, Height);
-            _image.texture = _texture;
+        }
 
-            _clearColors = new Color[Height];
-            for (var i = 0; i < Height; i++)
+        public static void InitializeTextureBuffer(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            var fillLen = width * height;
+            TextureBuffer = new Color[fillLen];
+            for (var i = 0; i < fillLen; i++)
             {
-                _clearColors[i] = Color.clear;
+                TextureBuffer[i] = Color.clear;
             }
-
-            var fillLen = _texture.GetPixels().Length;
-            _fillClearColors = new Color[fillLen];
-            for(var i=0; i<fillLen; i++)
-            {
-                _fillClearColors[i] = Color.clear;
-            }
-
-            Clear();
         }
 
         public void SetNoteColor(Color color)
         {
             _noteColor = color;
-            _image.GetComponent<Outline>().effectColor = color;
         }
 
         public void Write(int index, double melo, double vol)
         {
-            var threshold = (int)(melo * Height);
+            var threshold = (int) (melo * Height);
 
             if (index < 0 || index + 1 > Width) return;
-            var color = _noteColor;
-            color.a = (float)vol;
-            _texture.SetPixel(index, threshold, color);
+            TextureBuffer[index + threshold * Width].r = _noteColor.r;
+            TextureBuffer[index + threshold * Width].g = _noteColor.g;
+            TextureBuffer[index + threshold * Width].b = _noteColor.b;
+            TextureBuffer[index + threshold * Width].a = 1;
         }
 
         public void Erase(int index)
         {
             if (index < 0 || index + 1 > Width) return;
-            _texture.SetPixels(index, 0, 1, Height, _clearColors);
+            for (var i = 0; i < Height; i++)
+            {
+                TextureBuffer[index + i * Width].a = 0;
+            }
         }
 
         public void UpdateFrame()
         {
-            _texture.Apply();
         }
 
-        public void Clear()
+        public static void Clear()
         {
-            _texture.SetPixels(_fillClearColors);
+            var len = TextureBuffer.Length;
+            for (var i = 0; i < len; i++)
+            {
+                TextureBuffer[i].a = 0;
+            }
         }
     }
 }

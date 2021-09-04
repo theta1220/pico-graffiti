@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using NAudio.Wave;
 using PicoGraffiti.Model;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -16,7 +17,7 @@ namespace PicoGraffiti.Framework
         public const uint SAMPLE_RATE = 44100;
         public const double SCALE_FREQ = 1.059463094;
         public const double A0 = 32.703;
-        public const int MELO_NUM = 50;
+        public const int MELO_NUM = 88;
 
         private int _noiseBuff;
 
@@ -38,64 +39,31 @@ namespace PicoGraffiti.Framework
             }
         }
 
-        public async UniTask Save(Score score, string path)
+        public static void Save(Score score, string path)
         {
-            await SaveInternal(score, path);
+            var wave = new Wave();
+            wave.SaveInternal(score, path);
         }
 
-        async UniTask SaveInternal(Score score, string path)
+        void SaveInternal(Score score, string path)
         {
+            ResetCount(score);
+            
             // 波形作成
             var wave = CreateAllWave(score);
-            uint wavelen = (uint) wave.Count;
 
-            // WAVEファイルヘッダ
-            var header = new WaveFileHeader();
-
-            header.nChannels = 2;
-            header.wBitsPerSample = 32;
-            header.nSamplesPerSec = SAMPLE_RATE;
-            header.nBlockAlign = (ushort) (header.wBitsPerSample / 8 * header.nChannels);
-            header.nAvgBytesPerSec = (uint) SAMPLE_RATE * header.nBlockAlign;
-
-            header.riff_cksize = 36 + wavelen * 2;
-            header.data_cksize = wavelen * 2;
-
-            using (FileStream stream = new FileStream(path, FileMode.Create))
+            using (var fs = new FileStream(path, FileMode.Create))
+            using (var wr = new WaveFileWriter(fs, WaveFormat.CreateIeeeFloatWaveFormat((int)SAMPLE_RATE, 2)))
             {
-                // ヘッダーの書き込み
-                FieldInfo[] infos = typeof(WaveFileHeader).GetFields();
-                foreach (FieldInfo info in infos)
-                {
-                    byte[] ba = BitConverter.GetBytes(Convert.ToUInt32(info.GetValue(header)));
-                    stream.Write(ba, 0, Marshal.SizeOf(info.FieldType));
-                }
-
-                // 波形の書き込み
-                List<byte> bin = new List<byte>();
-                foreach (var w in wave)
-                {
-                    var buf = new List<byte>();
-                    foreach (var b in BitConverter.GetBytes(Convert.ToSingle(w)))
-                    {
-                        buf.Add(b);
-                    }
-
-                    buf.Reverse();
-                    foreach (var b in buf)
-                    {
-                        bin.Add(b);
-                    }
-                }
-
-                stream.Write(bin.ToArray(), 0, bin.Count);
-                stream.Seek(0, SeekOrigin.Begin);
+                wr.WriteSamples(wave.ToArray(), 0, wave.Count);
             }
+            
+            Debug.Log("Wavファイル生成完了");
         }
 
         private List<float> CreateAllWave(Score score)
         {
-            var size = score.GetSize();
+            var size = score.GetSize() * Track.NOTE_GRID_SIZE + SAMPLE_RATE * 3;
             var list = new List<float>();
             for (long i = 0; i < size; i++)
             {
@@ -144,7 +112,7 @@ namespace PicoGraffiti.Framework
             {
                 if (_prevNote != null)
                 {
-                    _vol = 0.5f;
+                    _vol = (float)_prevNote.Vol * 0.4f;
                 }
                 curNote = _currentNote;
                 _vol -= 0.00001f;
@@ -158,10 +126,10 @@ namespace PicoGraffiti.Framework
             if (curNote == null) return 0;
             
             // 音階周波数
-            var freq = A0 * Math.Pow(SCALE_FREQ, curNote.Melo * MELO_NUM + 12 * 1 + 2);
+            var freq = A0 * Math.Pow(SCALE_FREQ, curNote.Melo * MELO_NUM + 2);
             // 周波数
             var r = SAMPLE_RATE / freq * 4;
-            if (_rCount == (long)_currentR)
+            if (_rCount >= (long)_currentR)
             {
                 _currentR = r;
                 _rCount = 0;
@@ -271,24 +239,20 @@ namespace PicoGraffiti.Framework
 
         public float GetWhiteNoise(double t, float vol)
         {
-            var index = Mathf.FloorToInt(_whiteNoisePattern.Count * (float) t);
-            if (index >= _whiteNoisePattern.Count)
-            {
-                index = 0;
-            }
-
-            return _whiteNoisePattern[index] * vol;
+            return (float) (_random.NextDouble() * 2 - 1) * vol;
         }
 
+        private float _pinkNoiseBuff = 0;
         public float GetPinkNoise(double t, float vol)
         {
-            var index = Mathf.FloorToInt(_pinkNoisePattern.Count * (float) t);
-            if (index >= _pinkNoisePattern.Count)
+            var r = _currentR / 128;
+            var rCount = _rCount;
+            if (rCount % (long)r == 0)
             {
-                index = 0;
+                _pinkNoiseBuff = (float) _random.NextDouble() * 2 - 1;
             }
 
-            return _pinkNoisePattern[index] * vol;
+            return _pinkNoiseBuff * vol;
         }
     }
 }
