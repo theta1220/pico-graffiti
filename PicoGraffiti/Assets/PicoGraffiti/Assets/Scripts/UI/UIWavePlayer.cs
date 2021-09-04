@@ -42,7 +42,6 @@ namespace PicoGraffiti.UI
 
         public void Stop()
         {
-            _index = 0;
             _score = null;
             _start = false;
         }
@@ -73,7 +72,6 @@ namespace PicoGraffiti.UI
                     {
                         data[i * channels + ch] = _wave.Calc(i, _touchNote);
                     }
-                    _index++;
                 }
             }
             

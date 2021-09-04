@@ -129,7 +129,7 @@ namespace PicoGraffiti.Assets.Scripts
                     }
                     else
                     {
-                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, _offset * Track.NOTE_GRID_SIZE);
+                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, GetPlayOffset());
                     }
                 }
             }
@@ -182,11 +182,23 @@ namespace PicoGraffiti.Assets.Scripts
         {
             if (!UIWavePlayer.Instance.IsPlaying) return;
 
-            var bpmRate = 60.0 / (ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
-            var len = bpmRate * Wave.SAMPLE_RATE;
-            _offset = (int)(UIWavePlayer.Instance.Index / len);
+            _offset = GetPlayingOffset();
             ScoreApply();
             UIHandler.UILines.Instance.OnMove(_offset);
+        }
+
+        public int GetPlayingOffset()
+        {
+            var bpmRate = 60.0 / (ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
+            var len = bpmRate * Wave.SAMPLE_RATE;
+            return (int)(UIWavePlayer.Instance.Index / len);
+        }
+
+        public long GetPlayOffset()
+        {
+            var bpmRate = 60.0 / (ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
+            var len = bpmRate * Wave.SAMPLE_RATE;
+            return (long)(_offset * len);
         }
 
         public void ScoreApply()
