@@ -35,7 +35,7 @@ namespace PicoGraffiti.Assets.Scripts
             UIMain = await Tuna.Object<UIMain>.Create();
 
             UIScoreHandler = new UIHandler(UIMain.Instance.Content);
-            await UIScoreHandler.InitializeAsync(Wave.MELO_NUM, 2000);
+            await UIScoreHandler.InitializeAsync(Wave.MELO_NUM, 2500);
             UIVolumeHandler = new UIHandler(UIMain.Instance.VolumeRoot);
             await UIVolumeHandler.InitializeAsync(10, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().rect.height);
 
@@ -152,7 +152,7 @@ namespace PicoGraffiti.Assets.Scripts
             VolumeHandler.ScoreApply();
         }
 
-        public void OnMoveEvent(int offset)
+        public void OnMoveEvent(float offset)
         {
             ScoreHandler.Offset = offset;
             VolumeHandler.Offset = offset;

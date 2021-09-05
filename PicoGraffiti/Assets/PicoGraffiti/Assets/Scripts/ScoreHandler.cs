@@ -22,7 +22,7 @@ namespace PicoGraffiti.Assets.Scripts
         public UIHandler UIHandler { get; private set; }
         public Tuna.Object<UIWavePlayer> UIWavePlayer { get; private set; }
 
-        public int Offset
+        public float Offset
         {
             get { return _offset; }
             set { _offset = value; }
@@ -30,10 +30,10 @@ namespace PicoGraffiti.Assets.Scripts
 
         public UnityEvent OnWrite = new UnityEvent();
         public UnityEvent OnErase = new UnityEvent();
-        public UnityEvent<int> OnMove = new UnityEvent<int>();
+        public UnityEvent<float> OnMove = new UnityEvent<float>();
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
-        private int _offset = 0;
+        private float _offset = 0;
         private bool _scoreApplyFlag = false;
         private ScoreType _scoreType = ScoreType.None;
 
@@ -138,13 +138,13 @@ namespace PicoGraffiti.Assets.Scripts
                 ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
             }
 
-            _CurrentTrack.Erase(index - _offset);
+            _CurrentTrack.Erase(index - (int)_offset);
             OnErase.Invoke();
         }
 
         public void OnMoveEvent(Vector2 dir)
         {
-            _offset -= (int) (dir.x - UIHandler.UIScore.Instance.PrevPos.x);
+            _offset -= dir.x - UIHandler.UIScore.Instance.PrevPos.x;
             if (_offset < 0) _offset = 0;
             OnMove.Invoke(_offset);
         }
@@ -160,13 +160,13 @@ namespace PicoGraffiti.Assets.Scripts
             foreach (var track in ScoreRepository.Instance.Score.Tracks)
             {
                 var uiTrack = UIHandler.UIScore.Instance.UITracks[track.Id].Instance;
-                for (var i = _offset; i < UIHandler.UIScore.Instance.Width + _offset; i++)
+                for (var i = (int)_offset; i < UIHandler.UIScore.Instance.Width + (int)_offset; i++)
                 {
                     if (track.Notes.ContainsKey(i))
                     {
                         var note = track.Notes[i];
-                        if (_scoreType == ScoreType.Melo) uiTrack.Write(i - _offset, note.Melo);
-                        else if (_scoreType == ScoreType.Volume) uiTrack.Write(i - _offset, note.Vol);
+                        if (_scoreType == ScoreType.Melo) uiTrack.Write(i - (int)_offset, note.Melo);
+                        else if (_scoreType == ScoreType.Volume) uiTrack.Write(i - (int)_offset, note.Vol);
                     }
                 }
             }
@@ -181,7 +181,7 @@ namespace PicoGraffiti.Assets.Scripts
 
             _offset = GetPlayingOffset();
             ScoreApply();
-            UIHandler.UILines.Instance.OnMove(_offset);
+            UIHandler.UILines.Instance.OnMove((int)_offset);
         }
 
         public int GetPlayingOffset()

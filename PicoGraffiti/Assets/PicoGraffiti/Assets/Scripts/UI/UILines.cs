@@ -21,7 +21,7 @@ namespace PicoGraffiti.UI
         public int Width = 0;
         public int Height = 0;
 
-        private int _offset = 0;
+        private float _offset = 0;
         private bool _moved = false;
 
         private int _num = 0;
@@ -72,10 +72,10 @@ namespace PicoGraffiti.UI
                 _textureBuffer[i].a = 0;
             }
             
+            // よこせん
             var count = 0;
             var wSplit = Width / 32;
             var hSplit = Height/ _num;
-            var offset = _offset % wSplit;
             for (var y = 0; y < Height; y+=hSplit)
             {
                 if (isSharp(count))
@@ -102,29 +102,36 @@ namespace PicoGraffiti.UI
                 count++;
             }
 
+            // たてせん
             count = 0;
+            var offset = (int)_offset;
             for (var x = 0; x < Width; x+=wSplit)
             {
-                var pos = x;
-                if (x - offset < 0)
+                var pos = x - offset;
+                while (pos < 0)
                 {
                     pos += Width;
                 }
                 for (var i = 0; i < Height; i++)
                 {
-                    _textureBuffer[pos - offset + i * Width].r = _lineColorH.r;
-                    _textureBuffer[pos - offset + i * Width].g = _lineColorH.g;
-                    _textureBuffer[pos - offset + i * Width].b = _lineColorH.b;
-                    _textureBuffer[pos - offset + i * Width].a = _lineColorH.a;
+                    _textureBuffer[pos + i * Width].r = _lineColorH.r;
+                    _textureBuffer[pos + i * Width].g = _lineColorH.g;
+                    _textureBuffer[pos + i * Width].b = _lineColorH.b;
+                    _textureBuffer[pos + i * Width].a = _lineColorH.a;
                 }
-                if (count % 2 == 0 && pos - offset + 1 < Width)
+                if (x / wSplit % 4 == 0)
                 {
+                    pos = x + 1 - offset;
+                    while (pos < 0)
+                    {
+                        pos += Width;
+                    }
                     for (var i = 0; i < Height; i++)
                     {
-                        _textureBuffer[(pos - offset + 1) + i * Width].r = _lineColorH.r;
-                        _textureBuffer[(pos - offset + 1) + i * Width].g = _lineColorH.g;
-                        _textureBuffer[(pos - offset + 1) + i * Width].b = _lineColorH.b;
-                        _textureBuffer[(pos - offset + 1) + i * Width].a = _lineColorH.a;
+                        _textureBuffer[pos + i * Width].r = _lineColorH.r;
+                        _textureBuffer[pos + i * Width].g = _lineColorH.g;
+                        _textureBuffer[pos + i * Width].b = _lineColorH.b;
+                        _textureBuffer[pos + i * Width].a = _lineColorH.a;
                     }
                 }
 
@@ -148,7 +155,7 @@ namespace PicoGraffiti.UI
             }
         }
 
-        public void OnMove(int offset)
+        public void OnMove(float offset)
         {
             _moved = true;
             _offset = offset;
