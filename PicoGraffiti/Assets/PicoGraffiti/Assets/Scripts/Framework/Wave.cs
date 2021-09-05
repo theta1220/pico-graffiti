@@ -19,25 +19,7 @@ namespace PicoGraffiti.Framework
         public const double A0 = 32.703;
         public const int MELO_NUM = 88;
 
-        private int _noiseBuff;
-
         System.Random _random = new System.Random();
-
-        private List<float> _whiteNoisePattern = new List<float>();
-        private List<float> _pinkNoisePattern = new List<float>();
-
-        public void Initialize()
-        {
-            for (var i = 0; i < 32768; i++)
-            {
-                _whiteNoisePattern.Add(Random.Range(-1.0f, 1.0f));
-            }
-
-            for (var i = 0; i < 128; i++)
-            {
-                _pinkNoisePattern.Add(Random.Range(-1.0f, 1.0f));
-            }
-        }
 
         public static void Save(Score score, string path)
         {
@@ -247,7 +229,7 @@ namespace PicoGraffiti.Framework
         {
             var r = _currentR / 128;
             var rCount = _rCount;
-            if (rCount % (long)r == 0)
+            if ((long)r == 0 || rCount % (long)r == 0)
             {
                 _pinkNoiseBuff = (float) _random.NextDouble() * 2 - 1;
             }

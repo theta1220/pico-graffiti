@@ -6,19 +6,6 @@ namespace Stocker.Extension
 {
     public static class Binary
     {
-        public static T DeepClone<T>(this T src) where T : class
-        {
-            using (var memoryStream = new System.IO.MemoryStream())
-            {
-                var binaryFormatter
-                    = new System.Runtime.Serialization
-                        .Formatters.Binary.BinaryFormatter();
-                binaryFormatter.Serialize(memoryStream, src); // シリアライズ
-                memoryStream.Seek(0, System.IO.SeekOrigin.Begin);
-                return (T) binaryFormatter.Deserialize(memoryStream); // デシリアライズ
-            }
-        }
-
         public static MemoryStream Serialize<T>(this T src) where T : class
         {
             var memoryStream = new MemoryStream();

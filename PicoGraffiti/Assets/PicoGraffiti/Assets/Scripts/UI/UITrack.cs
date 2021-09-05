@@ -14,10 +14,10 @@ namespace PicoGraffiti.UI
     {
         [SerializeField] private Color _noteColor;
 
-        public static int Width = 0;
-        public static int Height = 0;
+        public int Width = 0;
+        public int Height = 0;
 
-        public static Color[] TextureBuffer = null;
+        public UIScore.TextureBuffer TextureBuffer = null;
         private bool _isUpdateTexture = false;
 
         public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
@@ -26,15 +26,16 @@ namespace PicoGraffiti.UI
         {
         }
 
-        public static void InitializeTextureBuffer(int width, int height)
+        public void InitializeTextureBuffer(UIScore.TextureBuffer textureBuffer, int width, int height)
         {
+            TextureBuffer = textureBuffer;
             Width = width;
             Height = height;
             var fillLen = width * height;
-            TextureBuffer = new Color[fillLen];
+            TextureBuffer.Buffer = new Color[fillLen];
             for (var i = 0; i < fillLen; i++)
             {
-                TextureBuffer[i] = Color.clear;
+                TextureBuffer.Buffer[i] = Color.clear;
             }
         }
 
@@ -43,15 +44,17 @@ namespace PicoGraffiti.UI
             _noteColor = color;
         }
 
-        public void Write(int index, double melo, double vol)
+        public void Write(int index, double value)
         {
-            var threshold = (int) (melo * Height);
+            var threshold = (int) (value * (Height - 1));
 
             if (index < 0 || index + 1 > Width) return;
-            TextureBuffer[index + threshold * Width].r = _noteColor.r;
-            TextureBuffer[index + threshold * Width].g = _noteColor.g;
-            TextureBuffer[index + threshold * Width].b = _noteColor.b;
-            TextureBuffer[index + threshold * Width].a = 1;
+            var i = index + threshold * Width;
+            if (i < 0 || i >= TextureBuffer.Buffer.Length) return;
+            TextureBuffer.Buffer[i].r = _noteColor.r;
+            TextureBuffer.Buffer[i].g = _noteColor.g;
+            TextureBuffer.Buffer[i].b = _noteColor.b;
+            TextureBuffer.Buffer[i].a = 1;
         }
 
         public void Erase(int index)
@@ -59,21 +62,12 @@ namespace PicoGraffiti.UI
             if (index < 0 || index + 1 > Width) return;
             for (var i = 0; i < Height; i++)
             {
-                TextureBuffer[index + i * Width].a = 0;
+                TextureBuffer.Buffer[index + i * Width].a = 0;
             }
         }
 
         public void UpdateFrame()
         {
-        }
-
-        public static void Clear()
-        {
-            var len = TextureBuffer.Length;
-            for (var i = 0; i < len; i++)
-            {
-                TextureBuffer[i].a = 0;
-            }
         }
     }
 }

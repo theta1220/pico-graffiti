@@ -21,7 +21,12 @@ namespace PicoGraffiti.UI
             Move,
         }
 
-        public const int SCALE = 2;
+        public class TextureBuffer
+        {
+            public Color[] Buffer;
+        }
+
+        public const int SCALE = 3;
         
         [SerializeField] private Transform _tracks = null;
         [SerializeField] private List<Color> _noteColors = null;
@@ -34,6 +39,8 @@ namespace PicoGraffiti.UI
         public UnityEvent<Vector2> OnMoveEvent { get; private set; } = new UnityEvent<Vector2>();
         public Vector2 PrevPos { get; private set; }
         public List<Color> NoteColors => _noteColors;
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
         private State _state = State.Write;
@@ -41,19 +48,22 @@ namespace PicoGraffiti.UI
         private RawImage _image;
         private Texture2D _texture;
         private bool _isUpdateTexture = false;
+        private TextureBuffer _textureBuffer = null;
 
-        public async UniTask InitializeAsync()
+        public async UniTask InitializeAsync(float parentHeight)
         {
             UITracks = new Dictionary<ulong, Object<UITrack>>();
             _rectTransform = GetComponent<RectTransform>();
             _image = GetComponent<RawImage>();
-            var width = (int) _rectTransform.rect.width / SCALE;
-            var height = (int) _rectTransform.rect.height / SCALE;
-            _texture = new Texture2D(width, height);
+            Width = (int) _rectTransform.rect.width / SCALE;
+            Height = (int) parentHeight / SCALE;
+            _rectTransform.sizeDelta = new Vector2(_rectTransform.sizeDelta.x, Height * SCALE);
+            _texture = new Texture2D(Width, Height);
             _texture.filterMode = FilterMode.Point;
             _image.texture = _texture;
+            _textureBuffer = new TextureBuffer();
+            _textureBuffer.Buffer = new Color[Width * Height];
             UITracks.Clear();
-            UITrack.InitializeTextureBuffer(width, height);
             UpdateTexture();
         }
 
@@ -62,6 +72,7 @@ namespace PicoGraffiti.UI
             var uiTrack = await Tuna.Object<UITrack>.Create(_tracks);
             UITracks[track.Id] = uiTrack;
             await uiTrack.Instance.InitializeAsync();
+            uiTrack.Instance.InitializeTextureBuffer(_textureBuffer, Width, Height);
             uiTrack.Instance.OnPointerEvent.Subscribe(OnWriteEvent.Invoke).AddTo(_subscribers);
         }
 
@@ -72,10 +83,11 @@ namespace PicoGraffiti.UI
                 uiTrack.Value.Instance.UpdateFrame();
             }
 
-            if (_isUpdateTexture && UITrack.TextureBuffer != null)
+            if (_isUpdateTexture)
             {
-                _texture.SetPixels(UITrack.TextureBuffer);
+                _texture.SetPixels(_textureBuffer.Buffer);
                 _texture.Apply();
+                _isUpdateTexture = false;
             }
         }
 
@@ -160,6 +172,15 @@ namespace PicoGraffiti.UI
         public void UpdateTexture()
         {
             _isUpdateTexture = true;
+        }
+
+        public void Clear()
+        {
+            var len = _textureBuffer.Buffer.Length;
+            for (var i = 0; i < len; i++)
+            {
+                _textureBuffer.Buffer[i].a = 0;
+            }
         }
     }
 }

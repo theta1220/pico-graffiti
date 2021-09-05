@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Linq;
 using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
-using Tuna.Framework;
+using Stocker.Framework;
 using UnityEngine;
 
 namespace PicoGraffiti
 {
     [Serializable]
-    public class ScoreRepository
+    public class ScoreRepository : ICloneable<ScoreRepository>
     {
         public string Version { get; private set; }
         public Identity Identity { get; private set; }
@@ -36,6 +37,15 @@ namespace PicoGraffiti
         public void SetCurrentTrack(int index)
         {
             CurrentTrack = Score.Tracks[index];
+        }
+
+        public ScoreRepository DeepClone()
+        {
+            var obj = new ScoreRepository();
+            obj.Identity = Identity.DeepClone();
+            obj.Score = Score.DeepClone();
+            obj.CurrentTrack = obj.Score.Tracks.First(_ => CurrentTrack.Id == _.Id);
+            return obj;
         }
     }
 }

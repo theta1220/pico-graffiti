@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using PicoGraffiti.Framework;
+using Stocker.Framework;
 
 namespace PicoGraffiti.Model
 {
     [Serializable]
-    public class Track
+    public class Track : ICloneable<Track>
     {
         public const int NOTE_GRID_SIZE = 128;
-        
-        public SortedDictionary<int, Note> Notes = new SortedDictionary<int, Note>();
+
+        public Dictionary<int, Note> Notes = null;
         public ulong Id { get; private set; }
         public Score ParentScore { get; private set; }
         public WaveType WaveType { get; private set; }
@@ -21,12 +22,23 @@ namespace PicoGraffiti.Model
         {
             Id = id;
             Wave = new Wave();
-            Wave.Initialize();
             ParentScore = score;
             WaveType = waveType;
+            Notes = new Dictionary<int, Note>();
         }
 
-        public void SetNote(ulong id, int index, double melo, double vol = 1.0)
+        public Track DeepClone()
+        {
+            var obj = new Track(Id, ParentScore, WaveType);
+            foreach (var note in Notes)
+            {
+                obj.Notes.Add(note.Key, note.Value.DeepClone());
+            }
+
+            return obj;
+        }
+
+        public void SetNote(int index, double melo)
         {
             Note note = null;
             if (Notes.ContainsKey(index))
@@ -35,13 +47,27 @@ namespace PicoGraffiti.Model
             }
             else
             {
-                Notes[index] = new Note(id);
+                Notes[index] = new Note();
                 note = Notes[index];
             }
 
             note.Melo = melo;
-            note.Vol = vol;
             note.WaveType = WaveType;
+        }
+
+        public void SetNoteVolume(int index, double vol)
+        {
+            Note note = null;
+            if (Notes.ContainsKey(index))
+            {
+                note = Notes[index];
+            }
+            else
+            {
+                return;
+            }
+
+            note.Vol = vol;
         }
 
         public void RemoveNote(int index)
