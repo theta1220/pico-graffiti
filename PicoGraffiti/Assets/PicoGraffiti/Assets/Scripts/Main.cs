@@ -51,6 +51,8 @@ namespace PicoGraffiti.Assets.Scripts
 
             ScoreHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
             VolumeHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
+            ScoreHandler.OnErase.Subscribe(OnEraseEvent).AddTo(_subscribers);
+            VolumeHandler.OnErase.Subscribe(OnEraseEvent).AddTo(_subscribers);
             ScoreHandler.OnMove.Subscribe(OnMoveEvent).AddTo(_subscribers);
             VolumeHandler.OnMove.Subscribe(OnMoveEvent).AddTo(_subscribers);
 
@@ -125,6 +127,12 @@ namespace PicoGraffiti.Assets.Scripts
         }
 
         public void OnWriteEvent()
+        {
+            ScoreHandler.ScoreApply();
+            VolumeHandler.ScoreApply();
+        }
+
+        public void OnEraseEvent()
         {
             ScoreHandler.ScoreApply();
             VolumeHandler.ScoreApply();

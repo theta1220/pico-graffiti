@@ -29,6 +29,7 @@ namespace PicoGraffiti.Assets.Scripts
         }
 
         public UnityEvent OnWrite = new UnityEvent();
+        public UnityEvent OnErase = new UnityEvent();
         public UnityEvent<int> OnMove = new UnityEvent<int>();
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
@@ -149,6 +150,7 @@ namespace PicoGraffiti.Assets.Scripts
             }
 
             _CurrentTrack.Erase(index - _offset);
+            OnErase.Invoke();
         }
 
         public void OnMoveEvent(Vector2 dir)

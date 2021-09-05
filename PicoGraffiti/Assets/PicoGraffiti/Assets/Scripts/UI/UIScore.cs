@@ -26,7 +26,7 @@ namespace PicoGraffiti.UI
             public Color[] Buffer;
         }
 
-        public const int SCALE = 3;
+        public const int SCALE = 4;
         
         [SerializeField] private Transform _tracks = null;
         [SerializeField] private List<Color> _noteColors = null;
