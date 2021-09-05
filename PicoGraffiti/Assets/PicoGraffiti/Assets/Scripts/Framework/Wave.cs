@@ -106,6 +106,7 @@ namespace PicoGraffiti.Framework
             }
             _prevNote = note;
             if (curNote == null) return 0;
+            if (curNote.Melo < 0) return 0;
             
             // 音階周波数
             var freq = A0 * Math.Pow(SCALE_FREQ, curNote.Melo * MELO_NUM + 2);

@@ -9,12 +9,8 @@ namespace PicoGraffiti.Framework
         private ulong _count = 0;
         public ulong Get()
         {
-            return _count;
-        }
-
-        public void Add()
-        {
             _count++;
+            return _count;
         }
 
         public Identity DeepClone()
