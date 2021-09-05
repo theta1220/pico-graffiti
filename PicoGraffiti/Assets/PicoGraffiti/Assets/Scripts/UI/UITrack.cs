@@ -12,7 +12,7 @@ namespace PicoGraffiti.UI
 {
     public class UITrack : TunaBehaviour
     {
-        [SerializeField] private Color _noteColor;
+        private Color _noteColor;
 
         public int Width = 0;
         public int Height = 0;

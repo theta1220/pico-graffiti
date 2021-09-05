@@ -97,6 +97,20 @@ namespace PicoGraffiti.Assets.Scripts
             {
                 SaveDataManager.Export(ScoreRepository.Instance);
             }
+            
+            // Undo Redo
+            if (Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)))
+            {
+                ScoreRepository.Redo();
+                ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
+            }
+            else if (Input.GetKeyDown(KeyCode.Z))
+            {
+                ScoreRepository.Undo();
+                ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
+            }
 
             // 再生
             if (Input.GetKeyDown(KeyCode.Space))

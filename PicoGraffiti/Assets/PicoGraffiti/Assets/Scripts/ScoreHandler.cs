@@ -92,17 +92,6 @@ namespace PicoGraffiti.Assets.Scripts
             if (Input.GetKeyDown(KeyCode.Alpha4)) ScoreRepository.Instance.SetCurrentTrack(3);
             if (Input.GetKeyDown(KeyCode.Alpha5)) ScoreRepository.Instance.SetCurrentTrack(4);
 
-            // Undo Redo
-            if (Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)))
-            {
-                ScoreRepository.Redo();
-                ScoreApply();
-            }
-            else if (Input.GetKeyDown(KeyCode.Z))
-            {
-                ScoreRepository.Undo();
-                ScoreApply();
-            }
 
             UpdateOffset();
         }
