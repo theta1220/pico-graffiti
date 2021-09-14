@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using Tuna;
@@ -9,24 +10,24 @@ namespace PicoGraffiti.UI
     {
         private bool _start = false;
         private long _index = 0;
-        private Score _score = null;
+        private Stocker.Framework.Version<ScoreRepository> _scoreRepo = null;
         private Wave _wave = null;
         private Note _touchNote = null;
         public bool IsPlaying => _start;
         public long Index => _index;
 
-        public void Initialize()
+        public void Initialize(Stocker.Framework.Version<ScoreRepository> scoreRepo)
         {
+            _scoreRepo = scoreRepo;
             _wave = new Wave();
             _touchNote = new Note();
         }
 
-        public void Play(Score score, long offset)
+        public void Play(long offset)
         {
             _index = offset;
-            _score = score;
             _start = true;
-            Wave.ResetCount(_score);
+            Wave.ResetCount(_scoreRepo.Instance.Score);
         }
 
         public void Pause()
@@ -41,7 +42,6 @@ namespace PicoGraffiti.UI
 
         public void Stop()
         {
-            _score = null;
             _start = false;
         }
 
@@ -69,7 +69,7 @@ namespace PicoGraffiti.UI
                 {
                     for (var ch = 0; ch < channels; ch++)
                     {
-                        data[i * channels + ch] = _wave.Calc(i, _touchNote);
+                        data[i * channels + ch] = _wave.Calc(_touchNote, false, 1.0f, _scoreRepo.Instance.Score.Trans);
                     }
                 }
             }
@@ -80,7 +80,7 @@ namespace PicoGraffiti.UI
             {
                 for (var ch = 0; ch < channels; ch++)
                 {
-                    data[i * channels + ch] = Wave.CreateWave(_score, ch, _index);
+                    data[i * channels + ch] = Wave.CreateWave(_scoreRepo.Instance.Score, ch, _index);
                 }
                 _index++;
             }

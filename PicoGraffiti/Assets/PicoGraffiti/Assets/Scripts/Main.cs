@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using PicoGraffiti.Framework;
@@ -21,6 +22,8 @@ namespace PicoGraffiti.Assets.Scripts
         public ScoreHandler VolumeHandler { get; private set; }
         public Tuna.Object<UIWavePlayer> UIWavePlayer { get; private set; }
         public SaveDataManager SaveDataManager { get; private set; }
+        public Tuna.Object<UIValue> BPM { get; private set; }
+        public Tuna.Object<UIValue> Trans { get; private set; }
 
         private bool _isSetupEnd = false;
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
@@ -40,7 +43,7 @@ namespace PicoGraffiti.Assets.Scripts
             await UIVolumeHandler.InitializeAsync(10, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().rect.height);
 
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
-            UIWavePlayer.Instance.Initialize();
+            UIWavePlayer.Instance.Initialize(ScoreRepository);
 
             ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, ScoreRepository, UIScoreHandler, UIWavePlayer);
             await ScoreHandler.InitializeAsync();
@@ -48,6 +51,16 @@ namespace PicoGraffiti.Assets.Scripts
             VolumeHandler = new ScoreHandler(ScoreHandler.ScoreType.Volume, ScoreRepository, UIVolumeHandler,
                 UIWavePlayer);
             await VolumeHandler.InitializeAsync();
+
+            BPM = await Tuna.Object<UIValue>.Create(UIMain.Instance.ScoreValuesRoot);
+            BPM.Instance.Initialize("BPM", ScoreRepository.Instance.Score.BPM);
+            BPM.Instance.OnEndEdit.Subscribe(
+                    value => ScoreRepository.Instance.Score.BPM = (int) value).AddTo(_subscribers);
+            
+            Trans = await Tuna.Object<UIValue>.Create(UIMain.Instance.ScoreValuesRoot);
+            Trans.Instance.Initialize("Trans", ScoreRepository.Instance.Score.Trans);
+            Trans.Instance.OnEndEdit.Subscribe(
+                value => ScoreRepository.Instance.Score.Trans = (int) value).AddTo(_subscribers);
 
             ScoreHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
             VolumeHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
@@ -66,6 +79,13 @@ namespace PicoGraffiti.Assets.Scripts
             UIVolumeHandler.Dispose();
             UIWavePlayer.Dispose();
             ScoreHandler.Dispose();
+            BPM.Dispose();
+            Trans.Dispose();
+        }
+
+        public void OnApplicationQuit()
+        {
+            SaveDataManager.Save(ScoreRepository.Instance, "temp.pg");
         }
 
         public void Update()
@@ -81,31 +101,34 @@ namespace PicoGraffiti.Assets.Scripts
             UIVolumeHandler.UpdateFrame();
 
             // ファイル
-            if (Input.GetKeyDown(KeyCode.I))
+            if (ExclusiveInput.GetKeyDown(KeyCode.I))
             {
                 ScoreRepository.SetInstance(SaveDataManager.Load());
                 ScoreHandler.ScoreApply();
+                BPM.Instance.SetValue(ScoreRepository.Instance.Score.BPM);
+                Trans.Instance.SetValue(ScoreRepository.Instance.Score.Trans);
             }
 
-            if (Input.GetKeyDown(KeyCode.O))
+            if (ExclusiveInput.GetKeyDown(KeyCode.O))
             {
                 SaveDataManager.Save(ScoreRepository.Instance);
             }
 
             // エクスポート
-            if (Input.GetKeyDown(KeyCode.E))
+            if (ExclusiveInput.GetKeyDown(KeyCode.E))
             {
                 SaveDataManager.Export(ScoreRepository.Instance);
             }
             
             // Undo Redo
-            if (Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)))
+            if (ExclusiveInput.GetKeyDown(KeyCode.Z) &&
+                (ExclusiveInput.GetKey(KeyCode.RightShift) || ExclusiveInput.GetKey(KeyCode.LeftShift)))
             {
                 ScoreRepository.Redo();
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
             }
-            else if (Input.GetKeyDown(KeyCode.Z))
+            else if (ExclusiveInput.GetKeyDown(KeyCode.Z))
             {
                 ScoreRepository.Undo();
                 ScoreHandler.ScoreApply();
@@ -113,7 +136,7 @@ namespace PicoGraffiti.Assets.Scripts
             }
 
             // 再生
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (ExclusiveInput.GetKeyDown(KeyCode.Space))
             {
                 if (UIWavePlayer.Instance.IsPlaying)
                 {
@@ -121,13 +144,14 @@ namespace PicoGraffiti.Assets.Scripts
                 }
                 else
                 {
-                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    if (ExclusiveInput.GetKey(KeyCode.LeftShift) ||
+                        ExclusiveInput.GetKey(KeyCode.RightShift))
                     {
-                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, 0);
+                        UIWavePlayer.Instance.Play(0);
                     }
                     else
                     {
-                        UIWavePlayer.Instance.Play(ScoreRepository.Instance.Score, GetPlayOffset());
+                        UIWavePlayer.Instance.Play(GetPlayOffset());
                     }
                 }
             }

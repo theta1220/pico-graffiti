@@ -22,10 +22,18 @@ namespace PicoGraffiti.Framework
             }
         }
 
-        public void Save(ScoreRepository scoreRepository)
+        public void Save(ScoreRepository scoreRepository, string defaultFileName =  "")
         {
-            var path = StandaloneFileBrowser.SaveFilePanel("Save", Application.persistentDataPath, "", "pg");
-            if (string.IsNullOrEmpty(path)) return;
+            var path = "";
+            if (string.IsNullOrEmpty(defaultFileName))
+            {
+                path = StandaloneFileBrowser.SaveFilePanel("Save", Application.persistentDataPath, defaultFileName, "pg");
+                if (string.IsNullOrEmpty(path)) return;
+            }
+            else
+            {
+                path = $"{Application.persistentDataPath}/{defaultFileName}";
+            }
 
             using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
             {

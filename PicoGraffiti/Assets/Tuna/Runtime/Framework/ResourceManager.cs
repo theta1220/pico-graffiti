@@ -55,7 +55,7 @@ namespace Tuna.Framework
             if (!_loadedResourceTypes.Contains(typeof(T)))
             {
                 var res = _resourcePool.Find(info => info.Type == typeof(T));
-                UnloadInternal(res);
+                // UnloadInternal(res);
             }
         }
 
@@ -74,9 +74,16 @@ namespace Tuna.Framework
 
         private void UnloadInternal(ResourceInfo info)
         {
-            Resources.UnloadAsset(info.LoadedResource);
             var resourcePath = $"{info.Type.FullName}".Replace('.', '/');
-            Debug.Log($"{resourcePath}をアンロードしました");
+            try
+            {
+                Resources.UnloadAsset(info.LoadedResource);
+                Debug.Log($"{resourcePath}をアンロードしました");
+            }
+            catch
+            {
+                Debug.Log($"{resourcePath}をアンロードしようとしましたが失敗しました");
+            }
         }
     }
 }

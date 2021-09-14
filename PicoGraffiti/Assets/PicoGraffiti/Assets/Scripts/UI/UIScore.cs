@@ -105,7 +105,7 @@ namespace PicoGraffiti.UI
         {
             if (_state == State.None)
             {
-                if (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)) _state = State.Move;
+                if (ExclusiveInput.GetKey(KeyCode.RightShift) || ExclusiveInput.GetKey(KeyCode.LeftShift)) _state = State.Move;
                 else if (Input.GetMouseButtonDown(0)) _state = State.Write;
                 else if (Input.GetMouseButtonDown(1)) _state = State.Erase;
             }

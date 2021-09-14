@@ -81,16 +81,19 @@ namespace PicoGraffiti.Assets.Scripts
             }
 
             // UITrack切り替え
-            if (Input.GetKeyDown(KeyCode.Tab))
+            if (ExclusiveInput.GetKeyDown(KeyCode.Tab))
             {
                 ScoreRepository.Instance.SetNextTrack();
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) ScoreRepository.Instance.SetCurrentTrack(0);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) ScoreRepository.Instance.SetCurrentTrack(1);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) ScoreRepository.Instance.SetCurrentTrack(2);
-            if (Input.GetKeyDown(KeyCode.Alpha4)) ScoreRepository.Instance.SetCurrentTrack(3);
-            if (Input.GetKeyDown(KeyCode.Alpha5)) ScoreRepository.Instance.SetCurrentTrack(4);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha1)) ScoreRepository.Instance.SetCurrentTrack(0);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha2)) ScoreRepository.Instance.SetCurrentTrack(1);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha3)) ScoreRepository.Instance.SetCurrentTrack(2);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha4)) ScoreRepository.Instance.SetCurrentTrack(3);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha5)) ScoreRepository.Instance.SetCurrentTrack(4);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha6)) ScoreRepository.Instance.SetCurrentTrack(5);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) ScoreRepository.Instance.SetCurrentTrack(6);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) ScoreRepository.Instance.SetCurrentTrack(7);
 
 
             UpdateOffset();
@@ -102,9 +105,43 @@ namespace PicoGraffiti.Assets.Scripts
             var value = (double) pos.y / UIHandler.UIScore.Instance.Height;
             if (value < 0) value = 0;
             if (value > 1) value = 1;
+
+            bool isArpeggio = ExclusiveInput.GetKey(KeyCode.F);
+            
+            // グリッドに沿う
+            if (ExclusiveInput.GetKey(KeyCode.G))
+            {
+                value = Mathf.Round((float)value * 89.0f) / 89.0;
+            }
+            // オクターブ交互にする
+            if (ExclusiveInput.GetKey(KeyCode.D) &&
+                Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % 2 == 1)
+            {
+                value = ((float) value * 89.0f + 12) / 89;
+            }
+            // コードアルペジオ
+            if (ExclusiveInput.GetKey(KeyCode.F))
+            {
+                var codes = new [] {"add9", "", "m", "", "m", "", "", "add9","", "m", "", "m-5"};
+                var pattern = new int[] {0, 1, 2, 1, 3, 1, 2, 1};
+                var patternIndex = 
+                    Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % pattern.Length;
+                var codeIndex = Mathf.RoundToInt((float)value * 89.0f) % codes.Length;
+                var code = CodeGetter.Get(codes[codeIndex]);
+                var add = code[pattern[patternIndex]];
+                if (add == -1) add = 12;
+                value = ((float) value * 89.0f + add) / 89;
+            }
             if (_scoreType == ScoreType.Melo)
             {
-                ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
+                if (isArpeggio && Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 32.0f)) % 2 == 1)
+                {
+                    ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
+                }
+                else
+                {
+                    ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
+                }
 
                 UIWavePlayer.Instance.OnWrite(value, ScoreRepository.Instance.CurrentTrack.WaveType);
             }

@@ -9,7 +9,7 @@ namespace PicoGraffiti.Model
     [Serializable]
     public class Track : ICloneable<Track>
     {
-        public const int NOTE_GRID_SIZE = 128;
+        public const int NOTE_GRID_SIZE = 128 / 2;
 
         public Dictionary<int, Note> Notes = null;
         public ulong Id { get; private set; }

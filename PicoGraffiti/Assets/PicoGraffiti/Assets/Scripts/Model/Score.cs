@@ -10,7 +10,8 @@ namespace PicoGraffiti.Model
     public class Score : ICloneable<Score>
     {
         public List<Track> Tracks { get; private set; } = new List<Track>();
-        public int BPM { get; private set; } = 144;
+        public int BPM { get; set; } = 144;
+        public int Trans { get; set; } = 0;
 
         public int GetSize()
         {
@@ -26,6 +27,7 @@ namespace PicoGraffiti.Model
             }
 
             obj.BPM = BPM;
+            obj.Trans = Trans;
             return obj;
         }
     }

@@ -8,7 +8,7 @@ namespace PicoGraffiti.Model
     public class Note : ICloneable<Note>
     {
         public double Melo = -1;
-        public double Vol = 0.5;
+        public double Vol = 0.75;
         public WaveType WaveType = WaveType.Square;
 
         public Note DeepClone()

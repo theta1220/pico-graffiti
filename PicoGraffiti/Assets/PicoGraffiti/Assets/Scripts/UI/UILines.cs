@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Xml.XPath;
+using Cysharp.Threading.Tasks;
 using PicoGraffiti.Framework;
 using Tuna;
 using UnityEngine;
@@ -8,6 +9,7 @@ namespace PicoGraffiti.UI
 {
     public class UILines : TunaBehaviour
     {
+        private const int SCALE = 4;
         [SerializeField] private RawImage _image;
         [SerializeField] private Color _lineColorW;
         [SerializeField] private Color _lineColorH;
@@ -31,8 +33,8 @@ namespace PicoGraffiti.UI
             _num = num;
             
             var rect = _image.rectTransform;
-            Width = (int)rect.rect.width / UIScore.SCALE;
-            Height = (int)height / UIScore.SCALE;
+            Width = (int)rect.rect.width / SCALE;
+            Height = (int)height / SCALE;
             _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, height);
             
             _texture = new Texture2D(Width, Height);
@@ -74,7 +76,8 @@ namespace PicoGraffiti.UI
             
             // よこせん
             var count = 0;
-            var wSplit = Width / 32;
+            var xSplit = 32.0f;
+            var wSplit = Width / xSplit;
             var hSplit = Height/ _num;
             for (var y = 0; y < Height; y+=hSplit)
             {
@@ -104,10 +107,10 @@ namespace PicoGraffiti.UI
 
             // たてせん
             count = 0;
-            var offset = (int)_offset;
-            for (var x = 0; x < Width; x+=wSplit)
+            var offset = (int)_offset * (UIScore.SCALE / SCALE);
+            for (var x = 0f; x < Width; x+=wSplit)
             {
-                var pos = x - offset;
+                var pos = (int)x - offset;
                 while (pos < 0)
                 {
                     pos += Width;
@@ -121,7 +124,7 @@ namespace PicoGraffiti.UI
                 }
                 if (x / wSplit % 4 == 0)
                 {
-                    pos = x + 1 - offset;
+                    pos = (int)x + 1 - offset;
                     while (pos < 0)
                     {
                         pos += Width;
