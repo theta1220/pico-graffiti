@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Tuna;
@@ -46,15 +47,26 @@ namespace PicoGraffiti.UI
 
         public void Write(int index, double value)
         {
-            var threshold = (int) (value * (Height - 1));
+            var y = (int) (value * (Height - 1));
+            WritePixel(index, y);
+        }
 
-            if (index < 0 || index + 1 > Width) return;
-            var i = index + threshold * Width;
-            if (i < 0 || i >= TextureBuffer.Buffer.Length) return;
-            TextureBuffer.Buffer[i].r = _noteColor.r;
-            TextureBuffer.Buffer[i].g = _noteColor.g;
-            TextureBuffer.Buffer[i].b = _noteColor.b;
-            TextureBuffer.Buffer[i].a = 1;
+        private void WritePixel(int x, int y)
+        {
+            WritePixelInternal(x, y);
+            WritePixelInternal(x + 1, y);
+            WritePixelInternal(x, y + 1);
+            WritePixelInternal(x + 1, y + 1);
+        }
+
+        private void WritePixelInternal(int x, int y)
+        {
+            var index = x + y * Width;
+            if (index < 0 || index >= TextureBuffer.Buffer.Length) return;
+            TextureBuffer.Buffer[index].r = _noteColor.r;
+            TextureBuffer.Buffer[index].g = _noteColor.g;
+            TextureBuffer.Buffer[index].b = _noteColor.b;
+            TextureBuffer.Buffer[index].a = 1;
         }
 
         public void Erase(int index)

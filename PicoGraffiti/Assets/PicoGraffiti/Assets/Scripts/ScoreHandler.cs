@@ -218,7 +218,7 @@ namespace PicoGraffiti.Assets.Scripts
 
             _offset = GetPlayingOffset();
             ScoreApply();
-            UIHandler.UILines.Instance.OnMove((int)_offset);
+            UIHandler.UILines.Instance.OnMove(_offset);
         }
 
         public int GetPlayingOffset()

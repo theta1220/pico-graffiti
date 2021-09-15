@@ -86,6 +86,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _image: {fileID: 7526900240853054439}
-  _lineColorW: {r: 0.28568882, g: 0.7194261, b: 0.8490566, a: 0.2}
-  _lineColorH: {r: 0.28627452, g: 0.7176471, b: 0.8509804, a: 0.13333334}
-  _lineColorS: {r: 0.28627452, g: 0.7176471, b: 0.8509804, a: 0.67058825}
+  _lineColorW: {r: 1, g: 0.8247605, b: 0.2216981, a: 0.12941177}
+  _lineColorH: {r: 1, g: 0.8235294, b: 0.22352941, a: 0.043137256}
+  _lineColorS: {r: 1, g: 0.8235294, b: 0.22352941, a: 0.23529412}
+  Width: 0
+  Height: 0

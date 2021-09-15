@@ -127,6 +127,10 @@ namespace PicoGraffiti.Framework
                     return 0;
                 }
                 // 音階周波数
+                if (note.WaveType == WaveType.Noise2 || note.WaveType == WaveType.Noise)
+                {
+                    trans = 0;
+                }
                 var freq = A0 * Math.Pow(SCALE_FREQ, note.Melo * 89 + code + trans);
                 
                 // 周波数

@@ -137,6 +137,21 @@ namespace PicoGraffiti.UI
                         _textureBuffer[pos + i * Width].a = _lineColorH.a;
                     }
                 }
+                if (x / wSplit % 16 == 0)
+                {
+                    pos = (int)x - 1 - offset;
+                    while (pos < 0)
+                    {
+                        pos += Width;
+                    }
+                    for (var i = 0; i < Height; i++)
+                    {
+                        _textureBuffer[pos + i * Width].r = _lineColorS.r;
+                        _textureBuffer[pos + i * Width].g = _lineColorS.g;
+                        _textureBuffer[pos + i * Width].b = _lineColorS.b;
+                        _textureBuffer[pos + i * Width].a = _lineColorS.a;
+                    }
+                }
 
                 count++;
             }
