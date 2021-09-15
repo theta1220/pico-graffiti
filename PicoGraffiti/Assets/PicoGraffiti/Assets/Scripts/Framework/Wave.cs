@@ -69,7 +69,7 @@ namespace PicoGraffiti.Framework
             {
                 var vol = 1.0f;
                 if (count == 1) vol = 2.0f;
-                if (count == 7) vol = 0.6f;
+                if (count == 7) vol = 1.0f;
                 wave += track.Wave.Calc(track.GetNote(index), count == 0, vol, track.ParentScore.Trans);
                 count++;
             }
@@ -119,7 +119,7 @@ namespace PicoGraffiti.Framework
             }
             public float Calc(Wave wave, Note note, float vol, int trans)
             {
-                var codes = new [] {"add9", "", "m", "", "m", "", "", "add9","", "m", "", "m-5"};
+                var codes = new [] {"add9", "m7", "", "", "m", "", "", "sus4","", "add9", "", "add9"};
                 var melo = Mathf.RoundToInt((float)note.Melo * 89);
                 var code = CodeGetter.Get(codes[melo % codes.Length])[_index];
                 if (code == -1)

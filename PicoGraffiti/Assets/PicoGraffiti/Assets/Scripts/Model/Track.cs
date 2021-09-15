@@ -13,7 +13,7 @@ namespace PicoGraffiti.Model
 
         public Dictionary<int, Note> Notes = null;
         public ulong Id { get; private set; }
-        public Score ParentScore { get; private set; }
+        public Score ParentScore { get; set; }
         public WaveType WaveType { get; private set; }
         
         public Wave Wave { get; private set; }

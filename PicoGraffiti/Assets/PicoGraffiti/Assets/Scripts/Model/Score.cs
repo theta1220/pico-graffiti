@@ -23,7 +23,9 @@ namespace PicoGraffiti.Model
             var obj = new Score();
             foreach (var track in Tracks)
             {
-                obj.Tracks.Add(track.DeepClone());
+                var cloneTrack = track.DeepClone();
+                cloneTrack.ParentScore = obj;
+                obj.Tracks.Add(cloneTrack);
             }
 
             obj.BPM = BPM;

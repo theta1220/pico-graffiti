@@ -12,12 +12,13 @@ namespace PicoGraffiti
     {
         public string Version { get; private set; }
         public Identity Identity { get; private set; }
-        public Score Score { get; private set; } = new Score();
+        public Score Score { get; private set; }
         public Track CurrentTrack { get; private set; } = null;
 
         public ScoreRepository()
         {
             Version = Application.version;
+            Score = new Score();
             Identity = new Identity();
             var track = new Track(Identity.Get(), Score, WaveType.Square25);
             Score.Tracks.Add(track);
