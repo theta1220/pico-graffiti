@@ -63,7 +63,6 @@ namespace PicoGraffiti.UI
                 _textureBuffer[i] = Color.clear;
             }
 
-            Write();
             _moved = true;
         }
 
