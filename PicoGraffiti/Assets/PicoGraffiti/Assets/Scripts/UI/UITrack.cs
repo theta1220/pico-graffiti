@@ -62,6 +62,7 @@ namespace PicoGraffiti.UI
         private void WritePixelInternal(int x, int y)
         {
             var index = x + y * Width;
+            if (x == Width) return;
             if (index < 0 || index >= TextureBuffer.Buffer.Length) return;
             TextureBuffer.Buffer[index].r = _noteColor.r;
             TextureBuffer.Buffer[index].g = _noteColor.g;

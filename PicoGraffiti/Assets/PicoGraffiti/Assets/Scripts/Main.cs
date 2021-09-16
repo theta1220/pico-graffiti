@@ -40,7 +40,7 @@ namespace PicoGraffiti.Assets.Scripts
             UIScoreHandler = new UIHandler(UIMain.Instance.Content);
             await UIScoreHandler.InitializeAsync(Wave.MELO_NUM, 2500);
             UIVolumeHandler = new UIHandler(UIMain.Instance.VolumeRoot);
-            await UIVolumeHandler.InitializeAsync(10, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().rect.height);
+            await UIVolumeHandler.InitializeAsync(5, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().rect.height);
 
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
             UIWavePlayer.Instance.Initialize(ScoreRepository);

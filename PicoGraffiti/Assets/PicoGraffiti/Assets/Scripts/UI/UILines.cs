@@ -1,6 +1,7 @@
 ﻿using System.Xml.XPath;
 using Cysharp.Threading.Tasks;
 using PicoGraffiti.Framework;
+using PicoGraffiti.Model;
 using Tuna;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,8 +34,8 @@ namespace PicoGraffiti.UI
             _num = num;
             
             var rect = _image.rectTransform;
-            Width = (int)rect.rect.width / SCALE;
-            Height = (int)height / SCALE;
+            Width = (int)rect.rect.width / UIScore.SCALE;
+            Height = (int)height / UIScore.SCALE;
             _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, height);
             
             _texture = new Texture2D(Width, Height);
@@ -76,8 +77,8 @@ namespace PicoGraffiti.UI
             
             // よこせん
             var count = 0;
-            var xSplit = 32.0f;
-            var wSplit = Width / xSplit;
+            var width = Track.NOTE_GRID_SIZE * 32;
+            var wSplit = Track.NOTE_GRID_SIZE / 2;
             var hSplit = Height/ _num;
             for (var y = 0; y < Height; y+=hSplit)
             {
@@ -107,54 +108,44 @@ namespace PicoGraffiti.UI
 
             // たてせん
             count = 0;
-            var offset = (int)_offset * (UIScore.SCALE / SCALE);
-            for (var x = 0f; x < Width; x+=wSplit)
+            for (var x = 0.0f; x < width; x+=wSplit)
             {
-                var pos = (int)x - offset;
+                var pos = x - _offset;
                 while (pos < 0)
                 {
-                    pos += Width;
+                    pos += width;
                 }
                 for (var i = 0; i < Height; i++)
                 {
-                    _textureBuffer[pos + i * Width].r = _lineColorH.r;
-                    _textureBuffer[pos + i * Width].g = _lineColorH.g;
-                    _textureBuffer[pos + i * Width].b = _lineColorH.b;
-                    _textureBuffer[pos + i * Width].a = _lineColorH.a;
+                    Write((int)pos, i);
                 }
-                if (x / wSplit % 4 == 0)
+                if (count % 4 == 0)
                 {
-                    pos = (int)x + 1 - offset;
-                    while (pos < 0)
-                    {
-                        pos += Width;
-                    }
                     for (var i = 0; i < Height; i++)
                     {
-                        _textureBuffer[pos + i * Width].r = _lineColorH.r;
-                        _textureBuffer[pos + i * Width].g = _lineColorH.g;
-                        _textureBuffer[pos + i * Width].b = _lineColorH.b;
-                        _textureBuffer[pos + i * Width].a = _lineColorH.a;
+                        Write((int)pos + 1, i);
                     }
                 }
-                if (x / wSplit % 16 == 0)
+                if (count % 16 == 0)
                 {
-                    pos = (int)x - 1 - offset;
-                    while (pos < 0)
-                    {
-                        pos += Width;
-                    }
                     for (var i = 0; i < Height; i++)
                     {
-                        _textureBuffer[pos + i * Width].r = _lineColorS.r;
-                        _textureBuffer[pos + i * Width].g = _lineColorS.g;
-                        _textureBuffer[pos + i * Width].b = _lineColorS.b;
-                        _textureBuffer[pos + i * Width].a = _lineColorS.a;
+                        Write((int)pos - 1, i);
                     }
                 }
 
                 count++;
             }
+        }
+
+        private void Write(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= Width || y >= Height) return;
+            
+            _textureBuffer[x + y * Width].r = _lineColorS.r;
+            _textureBuffer[x + y * Width].g = _lineColorS.g;
+            _textureBuffer[x + y * Width].b = _lineColorS.b;
+            _textureBuffer[x + y * Width].a = _lineColorS.a;
         }
 
         private bool isSharp(int melo)
@@ -167,6 +158,7 @@ namespace PicoGraffiti.UI
         {
             if (_moved)
             {
+                Write();
                 _texture.SetPixels(_textureBuffer);
                 _texture.Apply();
                 _moved = false;
@@ -177,7 +169,6 @@ namespace PicoGraffiti.UI
         {
             _moved = true;
             _offset = offset;
-            Write();
         }
     }
 }
