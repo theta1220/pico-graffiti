@@ -106,42 +106,47 @@ namespace PicoGraffiti.Assets.Scripts
             if (value < 0) value = 0;
             if (value > 1) value = 1;
 
-            bool isArpeggio = ExclusiveInput.GetKey(KeyCode.F);
-            
             // グリッドに沿う
-            if (ExclusiveInput.GetKey(KeyCode.G))
+            if (ExclusiveInput.GetKey(KeyCode.G) || ExclusiveInput.GetKey(KeyCode.F))
             {
                 value = Mathf.Round((float)value * 89.0f) / 89.0;
             }
-            // オクターブ交互にする
-            if (ExclusiveInput.GetKey(KeyCode.D) &&
-                Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % 2 == 1)
+            // ノイズ用
+            if (ExclusiveInput.GetKey(KeyCode.D))
             {
-                value = ((float) value * 89.0f + 12) / 89;
+                if (Mathf.FloorToInt(index / (Track.NOTE_GRID_SIZE / 16.0f)) % 8 == 0)
+                {
+                    value = Mathf.Round((float)value * 89.0f) / 89.0;
+                }
+                else
+                {
+                    return;
+                }
             }
             // コードアルペジオ
             if (ExclusiveInput.GetKey(KeyCode.F))
             {
-                var codes = new [] {"add9", "", "m", "", "m", "", "", "add9","", "m", "", "m-5"};
-                var pattern = new int[] {0, 1, 2, 1, 3, 1, 2, 1};
-                var patternIndex = 
-                    Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % pattern.Length;
-                var codeIndex = Mathf.RoundToInt((float)value * 89.0f) % codes.Length;
-                var code = CodeGetter.Get(codes[codeIndex]);
-                var add = code[pattern[patternIndex]];
-                if (add == -1) add = 12;
-                value = ((float) value * 89.0f + add) / 89;
+                // var codes = new [] {"add9", "", "m", "", "m", "", "", "add9","", "m", "", "m-5"};
+                // var pattern = new int[] {0, 1, 2, 1, 3, 1, 2, 1};
+                // var patternIndex = 
+                //     Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % pattern.Length;
+                // var codeIndex = Mathf.RoundToInt((float)value * 89.0f) % codes.Length;
+                // var code = CodeGetter.Get(codes[codeIndex]);
+                // var add = code[pattern[patternIndex]];
+                // if (add == -1) add = 12;
+                // value = ((float) value * 89.0f + add) / 89;
+            } 
+            // 高速アルペジオ
+            if (ExclusiveInput.GetKey(KeyCode.F))
+            {
+                if (Mathf.FloorToInt(index / (Track.NOTE_GRID_SIZE / 16.0f)) % 2 == 1)
+                {
+                    return;
+                }
             }
             if (_scoreType == ScoreType.Melo)
             {
-                if (isArpeggio && Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 32.0f)) % 2 == 1)
-                {
-                    ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
-                }
-                else
-                {
-                    ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
-                }
+                ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
 
                 UIWavePlayer.Instance.OnWrite(value, ScoreRepository.Instance.CurrentTrack.WaveType);
             }

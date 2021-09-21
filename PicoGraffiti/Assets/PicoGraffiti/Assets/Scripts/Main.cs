@@ -9,6 +9,7 @@ using Stocker.Framework;
 using Tuna;
 using Tuna.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PicoGraffiti.Assets.Scripts
 {
@@ -105,6 +106,7 @@ namespace PicoGraffiti.Assets.Scripts
             {
                 ScoreRepository.SetInstance(SaveDataManager.Load());
                 ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
                 BPM.Instance.SetValue(ScoreRepository.Instance.Score.BPM);
                 Trans.Instance.SetValue(ScoreRepository.Instance.Score.Trans);
             }
@@ -153,6 +155,27 @@ namespace PicoGraffiti.Assets.Scripts
                     {
                         UIWavePlayer.Instance.Play(GetPlayOffset());
                     }
+                }
+            }
+
+            if (ExclusiveInput.GetKeyDown(KeyCode.RightArrow))
+            {
+                ScoreHandler.Offset += UIScoreHandler.UIScore.Instance.Width;
+                ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
+                if (UIWavePlayer.Instance.IsPlaying)
+                {
+                    UIWavePlayer.Instance.Play(GetPlayOffset());
+                }
+            }
+            if (ExclusiveInput.GetKeyDown(KeyCode.LeftArrow))
+            {
+                ScoreHandler.Offset -= UIScoreHandler.UIScore.Instance.Width;
+                ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
+                if (UIWavePlayer.Instance.IsPlaying)
+                {
+                    UIWavePlayer.Instance.Play(GetPlayOffset());
                 }
             }
         }

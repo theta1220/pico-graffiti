@@ -17,6 +17,7 @@ namespace PicoGraffiti.Framework
             {
                 var f = new BinaryFormatter();
                 var scoreRepository = (ScoreRepository) f.Deserialize(fs);
+                Migration(scoreRepository);
                 fs.Close();
                 return scoreRepository;
             }
@@ -49,6 +50,21 @@ namespace PicoGraffiti.Framework
             if (string.IsNullOrEmpty(path)) return;
             
             Wave.Save(scoreRepository.Score, path);
+        }
+
+        public void Migration(ScoreRepository scoreRepository)
+        {
+            int count = 0;
+            foreach (var track in scoreRepository.Score.Tracks)
+            {
+                track.Wave = new Wave(track);
+                if (count == 0 || count == 1 || count == 2)
+                {
+                    track.OverrideWaveType = WaveType.Square;
+                }
+
+                count++;
+            }
         }
     }
 }

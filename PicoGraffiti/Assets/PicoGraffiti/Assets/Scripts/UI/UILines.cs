@@ -10,11 +10,12 @@ namespace PicoGraffiti.UI
 {
     public class UILines : TunaBehaviour
     {
-        private const int SCALE = 4;
+        private const int SCALE = 2;
         [SerializeField] private RawImage _image;
         [SerializeField] private Color _lineColorW;
         [SerializeField] private Color _lineColorH;
         [SerializeField] private Color _lineColorS;
+        [SerializeField] private Color _lineColor32;
         private Texture2D _texture = null;
         private Color[] _lineColorsW = null;
         private Color[] _lineColorsH = null;
@@ -34,8 +35,8 @@ namespace PicoGraffiti.UI
             _num = num;
             
             var rect = _image.rectTransform;
-            Width = (int)rect.rect.width / UIScore.SCALE;
-            Height = (int)height / UIScore.SCALE;
+            Width = (int)rect.rect.width / SCALE;
+            Height = (int)height / SCALE;
             _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, height);
             
             _texture = new Texture2D(Width, Height);
@@ -77,7 +78,7 @@ namespace PicoGraffiti.UI
             // よこせん
             var count = 0;
             var width = Track.NOTE_GRID_SIZE * 32;
-            var wSplit = Track.NOTE_GRID_SIZE / 2;
+            var wSplit = Track.NOTE_GRID_SIZE / 4;
             var hSplit = Height/ _num;
             for (var y = 0; y < Height; y+=hSplit)
             {
@@ -85,10 +86,10 @@ namespace PicoGraffiti.UI
                 {
                     for (var i = 0; i < Width; i++)
                     {
-                        _textureBuffer[i + y * Width].r = _lineColorS.r;
-                        _textureBuffer[i + y * Width].g = _lineColorS.g;
-                        _textureBuffer[i + y * Width].b = _lineColorS.b;
-                        _textureBuffer[i + y * Width].a = _lineColorS.a;
+                        _textureBuffer[i + y * Width].r = _lineColor32.r;
+                        _textureBuffer[i + y * Width].g = _lineColor32.g;
+                        _textureBuffer[i + y * Width].b = _lineColor32.b;
+                        _textureBuffer[i + y * Width].a = _lineColor32.a;
                     }
                 }
                 else
@@ -105,31 +106,43 @@ namespace PicoGraffiti.UI
                 count++;
             }
 
+            var offset = _offset * (UIScore.SCALE / (float)SCALE);
+
             // たてせん
             count = 0;
             for (var x = 0.0f; x < width; x+=wSplit)
             {
-                var pos = x - _offset;
+                var pos = x - offset;
                 while (pos < 0)
                 {
                     pos += width;
                 }
                 for (var i = 0; i < Height; i++)
                 {
-                    Write((int)pos, i);
+                    Write((int)pos, i, _lineColorH);
                 }
-                if (count % 4 == 0)
+                if (count % 32 == 0)
                 {
                     for (var i = 0; i < Height; i++)
                     {
-                        Write((int)pos + 1, i);
+                        Write((int)pos - 1, i, _lineColor32);
+                        Write((int)pos + 0, i, _lineColor32);
+                        Write((int)pos + 1, i, _lineColor32);
                     }
                 }
-                if (count % 16 == 0)
+                else if (count % 4 == 0)
                 {
                     for (var i = 0; i < Height; i++)
                     {
-                        Write((int)pos - 1, i);
+                        Write((int)pos + 1, i, _lineColorS);
+                        Write((int)pos + 0, i, _lineColorS);
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < Height; i++)
+                    {
+                        Write((int)pos + 0, i, _lineColorW);
                     }
                 }
 
@@ -137,14 +150,14 @@ namespace PicoGraffiti.UI
             }
         }
 
-        private void Write(int x, int y)
+        private void Write(int x, int y, Color color)
         {
             if (x < 0 || y < 0 || x >= Width || y >= Height) return;
             
-            _textureBuffer[x + y * Width].r = _lineColorS.r;
-            _textureBuffer[x + y * Width].g = _lineColorS.g;
-            _textureBuffer[x + y * Width].b = _lineColorS.b;
-            _textureBuffer[x + y * Width].a = _lineColorS.a;
+            _textureBuffer[x + y * Width].r = color.r;
+            _textureBuffer[x + y * Width].g = color.g;
+            _textureBuffer[x + y * Width].b = color.b;
+            _textureBuffer[x + y * Width].a = color.a;
         }
 
         private bool isSharp(int melo)

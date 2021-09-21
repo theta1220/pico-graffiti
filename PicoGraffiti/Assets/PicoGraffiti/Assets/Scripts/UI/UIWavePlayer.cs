@@ -19,7 +19,7 @@ namespace PicoGraffiti.UI
         public void Initialize(Stocker.Framework.Version<ScoreRepository> scoreRepo)
         {
             _scoreRepo = scoreRepo;
-            _wave = new Wave();
+            _wave = new Wave(null);
             _touchNote = new Note();
         }
 

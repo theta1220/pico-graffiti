@@ -18,10 +18,7 @@ namespace Tuna
 
         public void Dispose()
         {
-            GameObject.Destroy(Instance.gameObject);
             Instance = null;
-            GC.Collect();
-            Tuna.Framework.ResourceManager.Instance.Unload<T>();
         }
     }
 }

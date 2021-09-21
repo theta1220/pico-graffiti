@@ -15,16 +15,18 @@ namespace PicoGraffiti.Model
         public ulong Id { get; private set; }
         public Score ParentScore { get; set; }
         public WaveType WaveType { get; private set; }
+        public WaveType OverrideWaveType { get; set; }
         
-        public Wave Wave { get; private set; }
+        [field: NonSerialized] public Wave Wave { get; set; }
 
-        public Track(ulong id, Score score, WaveType waveType)
+        public Track(ulong id, Score score, WaveType waveType, WaveType overrideWaveType = WaveType.None)
         {
             Id = id;
-            Wave = new Wave();
+            Wave = new Wave(this);
             ParentScore = score;
             WaveType = waveType;
             Notes = new Dictionary<int, Note>();
+            OverrideWaveType = waveType;
         }
 
         public Track DeepClone()

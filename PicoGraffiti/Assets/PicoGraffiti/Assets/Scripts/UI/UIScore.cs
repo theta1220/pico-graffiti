@@ -27,7 +27,8 @@ namespace PicoGraffiti.UI
         }
 
         public const int SCALE = 4;
-        
+
+        [SerializeField] private RectTransform _rectTransform;
         [SerializeField] private Transform _tracks = null;
         [SerializeField] private List<Color> _noteColors = null;
 
@@ -44,7 +45,6 @@ namespace PicoGraffiti.UI
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
         private State _state = State.Write;
-        private RectTransform _rectTransform;
         private RawImage _image;
         private Texture2D _texture;
         private bool _isUpdateTexture = false;
@@ -53,9 +53,8 @@ namespace PicoGraffiti.UI
         public async UniTask InitializeAsync(float parentHeight)
         {
             UITracks = new Dictionary<ulong, Object<UITrack>>();
-            _rectTransform = GetComponent<RectTransform>();
             _image = GetComponent<RawImage>();
-            Width = (int) _rectTransform.rect.width / SCALE;
+            Width = (int) GetComponent<RectTransform>().rect.width / SCALE;
             Height = (int) parentHeight / SCALE;
             _rectTransform.sizeDelta = new Vector2(_rectTransform.sizeDelta.x, Height * SCALE);
             _texture = new Texture2D(Width, Height);
