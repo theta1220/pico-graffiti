@@ -23,10 +23,10 @@ namespace PicoGraffiti
             var track = new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square);
             Score.Tracks.Add(track);
             CurrentTrack = track;
-            
+
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));

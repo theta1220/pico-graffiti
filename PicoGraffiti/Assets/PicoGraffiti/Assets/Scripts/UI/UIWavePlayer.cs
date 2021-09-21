@@ -19,7 +19,7 @@ namespace PicoGraffiti.UI
         public void Initialize(Stocker.Framework.Version<ScoreRepository> scoreRepo)
         {
             _scoreRepo = scoreRepo;
-            _wave = new Wave(null);
+            _wave = scoreRepo.Instance.CurrentTrack.Wave;
             _touchNote = new Note();
         }
 
@@ -47,6 +47,7 @@ namespace PicoGraffiti.UI
 
         public void OnWrite(double melo, WaveType waveType)
         {
+            _wave = _scoreRepo.Instance.CurrentTrack.Wave;
             _touchNote.Melo = melo;
             _touchNote.WaveType = waveType;
 
@@ -59,6 +60,8 @@ namespace PicoGraffiti.UI
         public void OnWriteOff()
         {
             _touchNote.Melo = -1;
+            Wave.ResetCount(_scoreRepo.Instance.Score);
+            _wave.ResetCount();
         }
 
         public void OnAudioFilterRead(float[] data, int channels)

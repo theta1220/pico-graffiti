@@ -15,7 +15,6 @@ namespace PicoGraffiti.Assets.Scripts
 {
     public class Main : MonoBehaviour
     {
-        public Stocker.Framework.Version<ScoreRepository> ScoreRepository { get; private set; }
         public Tuna.Object<UIMain> UIMain { get; private set; }
         public UIHandler UIScoreHandler { get; private set; }
         public UIHandler UIVolumeHandler { get; private set; }
@@ -32,8 +31,8 @@ namespace PicoGraffiti.Assets.Scripts
         public async void Start()
         {
             ResourceManager.Instance.Initialize();
+            AppGlobal.Instance.Initialize();
 
-            ScoreRepository = new Version<ScoreRepository>();
             SaveDataManager = new SaveDataManager();
 
             UIMain = await Tuna.Object<UIMain>.Create();
@@ -44,24 +43,24 @@ namespace PicoGraffiti.Assets.Scripts
             await UIVolumeHandler.InitializeAsync(5, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().sizeDelta.y);
 
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
-            UIWavePlayer.Instance.Initialize(ScoreRepository);
+            UIWavePlayer.Instance.Initialize(AppGlobal.Instance.ScoreRepository);
 
-            ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, ScoreRepository, UIScoreHandler, UIWavePlayer);
+            ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, AppGlobal.Instance.ScoreRepository, UIScoreHandler, UIWavePlayer);
             await ScoreHandler.InitializeAsync();
 
-            VolumeHandler = new ScoreHandler(ScoreHandler.ScoreType.Volume, ScoreRepository, UIVolumeHandler,
+            VolumeHandler = new ScoreHandler(ScoreHandler.ScoreType.Volume, AppGlobal.Instance.ScoreRepository, UIVolumeHandler,
                 UIWavePlayer);
             await VolumeHandler.InitializeAsync();
 
             BPM = await Tuna.Object<UIValue>.Create(UIMain.Instance.ScoreValuesRoot);
-            BPM.Instance.Initialize("BPM", ScoreRepository.Instance.Score.BPM);
+            BPM.Instance.Initialize("BPM", AppGlobal.Instance.ScoreRepository.Instance.Score.BPM);
             BPM.Instance.OnEndEdit.Subscribe(
-                    value => ScoreRepository.Instance.Score.BPM = (int) value).AddTo(_subscribers);
+                    value => AppGlobal.Instance.ScoreRepository.Instance.Score.BPM = (int) value).AddTo(_subscribers);
             
             Trans = await Tuna.Object<UIValue>.Create(UIMain.Instance.ScoreValuesRoot);
-            Trans.Instance.Initialize("Trans", ScoreRepository.Instance.Score.Trans);
+            Trans.Instance.Initialize("Trans", AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
             Trans.Instance.OnEndEdit.Subscribe(
-                value => ScoreRepository.Instance.Score.Trans = (int) value).AddTo(_subscribers);
+                value => AppGlobal.Instance.ScoreRepository.Instance.Score.Trans = (int) value).AddTo(_subscribers);
 
             ScoreHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
             VolumeHandler.OnWrite.Subscribe(OnWriteEvent).AddTo(_subscribers);
@@ -86,7 +85,7 @@ namespace PicoGraffiti.Assets.Scripts
 
         public void OnApplicationQuit()
         {
-            SaveDataManager.Save(ScoreRepository.Instance, "temp.pg");
+            SaveDataManager.Save(AppGlobal.Instance.ScoreRepository.Instance, "temp.pg");
         }
 
         public void Update()
@@ -104,35 +103,35 @@ namespace PicoGraffiti.Assets.Scripts
             // ファイル
             if (ExclusiveInput.GetKeyDown(KeyCode.I))
             {
-                ScoreRepository.SetInstance(SaveDataManager.Load());
+                AppGlobal.Instance.ScoreRepository.SetInstance(SaveDataManager.Load());
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
-                BPM.Instance.SetValue(ScoreRepository.Instance.Score.BPM);
-                Trans.Instance.SetValue(ScoreRepository.Instance.Score.Trans);
+                BPM.Instance.SetValue(AppGlobal.Instance.ScoreRepository.Instance.Score.BPM);
+                Trans.Instance.SetValue(AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
             }
 
             if (ExclusiveInput.GetKeyDown(KeyCode.O))
             {
-                SaveDataManager.Save(ScoreRepository.Instance);
+                SaveDataManager.Save(AppGlobal.Instance.ScoreRepository.Instance);
             }
 
             // エクスポート
             if (ExclusiveInput.GetKeyDown(KeyCode.E))
             {
-                SaveDataManager.Export(ScoreRepository.Instance);
+                SaveDataManager.Export(AppGlobal.Instance.ScoreRepository.Instance);
             }
             
             // Undo Redo
             if (ExclusiveInput.GetKeyDown(KeyCode.Z) &&
                 (ExclusiveInput.GetKey(KeyCode.RightShift) || ExclusiveInput.GetKey(KeyCode.LeftShift)))
             {
-                ScoreRepository.Redo();
+                AppGlobal.Instance.ScoreRepository.Redo();
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
             }
             else if (ExclusiveInput.GetKeyDown(KeyCode.Z))
             {
-                ScoreRepository.Undo();
+                AppGlobal.Instance.ScoreRepository.Undo();
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
             }
@@ -182,7 +181,7 @@ namespace PicoGraffiti.Assets.Scripts
 
         public long GetPlayOffset()
         {
-            var bpmRate = 60.0 / (ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
+            var bpmRate = 60.0 / (AppGlobal.Instance.ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
             var len = bpmRate * Wave.SAMPLE_RATE;
             return (long) (ScoreHandler.Offset * len);
         }

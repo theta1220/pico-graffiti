@@ -22,11 +22,11 @@ namespace PicoGraffiti.Model
         public Track(ulong id, Score score, WaveType waveType, WaveType overrideWaveType = WaveType.None)
         {
             Id = id;
-            Wave = new Wave(this);
+            Wave = new Wave(Id);
             ParentScore = score;
             WaveType = waveType;
             Notes = new Dictionary<int, Note>();
-            OverrideWaveType = waveType;
+            OverrideWaveType = overrideWaveType;
         }
 
         public Track DeepClone()

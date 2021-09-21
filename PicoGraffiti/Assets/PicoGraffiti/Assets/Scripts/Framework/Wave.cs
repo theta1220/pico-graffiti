@@ -3,9 +3,11 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using NAudio.Wave;
 using PicoGraffiti.Model;
+using Stocker.Framework;
 using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -22,12 +24,21 @@ namespace PicoGraffiti.Framework
 
         System.Random _random = new System.Random();
 
-        private Track _track = null;
+        private ulong _trackId;
 
-        public Wave(Track track)
+        Track Track
         {
-            _track = track;
-            rCounters = new[]
+            get
+            {
+                return AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks.FirstOrDefault(_ => _.Id == _trackId);
+            }
+        }
+
+        public Wave(ulong trackId)
+        {
+            _trackId = trackId;
+            
+            _rCounters = new[]
             {
                 new RCounter(this, 0, 1, 1),
                 new RCounter(this, 1, 1, 1),
@@ -95,20 +106,24 @@ namespace PicoGraffiti.Framework
         private Note _prevNote = null;
         private Note _currentNote = null;
         private float _vol;
-        private RCounter[] rCounters;
+        private RCounter[] _rCounters;
 
         public static void ResetCount(Score score)
         {
             foreach (var track in score.Tracks)
             {
-                foreach (var rCounter in track.Wave.rCounters)
-                {
-                    rCounter.ResetCount();
-                }
-
-                track.Wave._currentNote = null;
-                track.Wave._prevNote = null;
+                track.Wave.ResetCount();
             }
+        }
+
+        public void ResetCount()
+        {
+            foreach (var rCounter in _rCounters)
+            {
+                rCounter.ResetCount();
+            }
+            _currentNote = null;
+            _prevNote = null;
         }
 
         [Serializable]
@@ -167,13 +182,14 @@ namespace PicoGraffiti.Framework
                 var waveType = note.WaveType;
                 if (_overrideCount < SAMPLE_RATE * 0.075 && waveType == WaveType.Square25)
                 {
-                    if (_wave._track == null)
+                    var track = _wave.Track;
+                    if (track == null)
                     {
                         waveType = WaveType.Square;
                     }
-                    else if (_wave._track.OverrideWaveType != WaveType.None)
+                    else if (track.OverrideWaveType != WaveType.None)
                     {
-                        waveType = wave._track.OverrideWaveType;
+                        waveType = track.OverrideWaveType;
                     }
                     _overrideCount++;
                 }
@@ -215,7 +231,7 @@ namespace PicoGraffiti.Framework
                 _vol = 1.0f;
                 if (_prevNote == null)
                 {
-                    foreach (var rCounter in rCounters)
+                    foreach (var rCounter in _rCounters)
                     {
                         rCounter.ResetOverrideCount();
                     }
@@ -228,7 +244,7 @@ namespace PicoGraffiti.Framework
 
             var buf = 0.0f;
             var count = 0;
-            foreach (var rCounter in rCounters)
+            foreach (var rCounter in _rCounters)
             {
                 if (count == 0 || isCode)
                 {
