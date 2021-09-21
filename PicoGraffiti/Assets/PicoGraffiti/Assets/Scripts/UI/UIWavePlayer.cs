@@ -10,16 +10,14 @@ namespace PicoGraffiti.UI
     {
         private bool _start = false;
         private long _index = 0;
-        private Stocker.Framework.Version<ScoreRepository> _scoreRepo = null;
-        private Wave _wave = null;
         private Note _touchNote = null;
         public bool IsPlaying => _start;
         public long Index => _index;
 
-        public void Initialize(Stocker.Framework.Version<ScoreRepository> scoreRepo)
+        private Wave Wave => AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Wave;
+
+        public void Initialize()
         {
-            _scoreRepo = scoreRepo;
-            _wave = scoreRepo.Instance.CurrentTrack.Wave;
             _touchNote = new Note();
         }
 
@@ -27,7 +25,7 @@ namespace PicoGraffiti.UI
         {
             _index = offset;
             _start = true;
-            Wave.ResetCount(_scoreRepo.Instance.Score);
+            Wave.ResetCount(AppGlobal.Instance.ScoreRepository.Instance.Score);
         }
 
         public void Pause()
@@ -47,7 +45,6 @@ namespace PicoGraffiti.UI
 
         public void OnWrite(double melo, WaveType waveType)
         {
-            _wave = _scoreRepo.Instance.CurrentTrack.Wave;
             _touchNote.Melo = melo;
             _touchNote.WaveType = waveType;
 
@@ -60,8 +57,8 @@ namespace PicoGraffiti.UI
         public void OnWriteOff()
         {
             _touchNote.Melo = -1;
-            Wave.ResetCount(_scoreRepo.Instance.Score);
-            _wave.ResetCount();
+            Wave.ResetCount(AppGlobal.Instance.ScoreRepository.Instance.Score);
+            Wave.ResetCount();
         }
 
         public void OnAudioFilterRead(float[] data, int channels)
@@ -72,7 +69,7 @@ namespace PicoGraffiti.UI
                 {
                     for (var ch = 0; ch < channels; ch++)
                     {
-                        data[i * channels + ch] = _wave.Calc(_touchNote, false, 1.0f, _scoreRepo.Instance.Score.Trans);
+                        data[i * channels + ch] = Wave.Calc(_touchNote, false, 1.0f, AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
                     }
                 }
             }
@@ -83,7 +80,7 @@ namespace PicoGraffiti.UI
             {
                 for (var ch = 0; ch < channels; ch++)
                 {
-                    data[i * channels + ch] = Wave.CreateWave(_scoreRepo.Instance.Score, ch, _index);
+                    data[i * channels + ch] = Wave.CreateWave(AppGlobal.Instance.ScoreRepository.Instance.Score, ch, _index);
                 }
                 _index++;
             }

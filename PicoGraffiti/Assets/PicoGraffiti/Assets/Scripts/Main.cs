@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using PicoGraffiti.UI;
@@ -43,12 +44,12 @@ namespace PicoGraffiti.Assets.Scripts
             await UIVolumeHandler.InitializeAsync(5, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().sizeDelta.y);
 
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
-            UIWavePlayer.Instance.Initialize(AppGlobal.Instance.ScoreRepository);
+            UIWavePlayer.Instance.Initialize();
 
-            ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, AppGlobal.Instance.ScoreRepository, UIScoreHandler, UIWavePlayer);
+            ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, UIScoreHandler, UIWavePlayer);
             await ScoreHandler.InitializeAsync();
 
-            VolumeHandler = new ScoreHandler(ScoreHandler.ScoreType.Volume, AppGlobal.Instance.ScoreRepository, UIVolumeHandler,
+            VolumeHandler = new ScoreHandler(ScoreHandler.ScoreType.Volume, UIVolumeHandler,
                 UIWavePlayer);
             await VolumeHandler.InitializeAsync();
 
@@ -104,6 +105,8 @@ namespace PicoGraffiti.Assets.Scripts
             if (ExclusiveInput.GetKeyDown(KeyCode.I))
             {
                 AppGlobal.Instance.ScoreRepository.SetInstance(SaveDataManager.Load());
+                ScoreHandler.Offset = 0;
+                VolumeHandler.Offset = 0;
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
                 BPM.Instance.SetValue(AppGlobal.Instance.ScoreRepository.Instance.Score.BPM);
@@ -176,6 +179,15 @@ namespace PicoGraffiti.Assets.Scripts
                 {
                     UIWavePlayer.Instance.Play(GetPlayOffset());
                 }
+            }
+
+            if (ExclusiveInput.GetKeyDown(KeyCode.N))
+            {
+                AppGlobal.Instance.Initialize();
+                ScoreHandler.Offset = 0;
+                VolumeHandler.Offset = 0;
+                ScoreHandler.ScoreApply();
+                VolumeHandler.ScoreApply();
             }
         }
 

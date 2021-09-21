@@ -18,7 +18,6 @@ namespace PicoGraffiti.Assets.Scripts
             Volume,
         }
 
-        public Version<ScoreRepository> ScoreRepository { get; private set; }
         public UIHandler UIHandler { get; private set; }
         public Tuna.Object<UIWavePlayer> UIWavePlayer { get; private set; }
 
@@ -38,23 +37,22 @@ namespace PicoGraffiti.Assets.Scripts
         private ScoreType _scoreType = ScoreType.None;
 
         private UITrack _CurrentTrack =>
-            UIHandler.UIScore.Instance.UITracks[ScoreRepository.Instance.CurrentTrack.Id]?.Instance;
+            UIHandler.UIScore.Instance.UITracks[AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Id]?.Instance;
 
-        public ScoreHandler(ScoreType scoreType, Version<ScoreRepository> scoreRepository, UIHandler uiHandler,
+        public ScoreHandler(ScoreType scoreType, UIHandler uiHandler,
             Tuna.Object<UIWavePlayer> uiWavePlayer)
         {
             _scoreType = scoreType;
-            ScoreRepository = scoreRepository;
             UIHandler = uiHandler;
             UIWavePlayer = uiWavePlayer;
         }
 
         public async UniTask InitializeAsync()
         {
-            for (var i = 0; i < ScoreRepository.Instance.Score.Tracks.Count; i++)
+            for (var i = 0; i < AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks.Count; i++)
             {
-                await UIHandler.UIScore.Instance.CreateTrackAsync(ScoreRepository.Instance.Score.Tracks[i]);
-                UIHandler.UIScore.Instance.UITracks[ScoreRepository.Instance.Score.Tracks[i].Id].Instance
+                await UIHandler.UIScore.Instance.CreateTrackAsync(AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks[i]);
+                UIHandler.UIScore.Instance.UITracks[AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks[i].Id].Instance
                     .SetNoteColor(UIHandler.UIScore.Instance.NoteColors[i]);
             }
 
@@ -83,17 +81,17 @@ namespace PicoGraffiti.Assets.Scripts
             // UITrack切り替え
             if (ExclusiveInput.GetKeyDown(KeyCode.Tab))
             {
-                ScoreRepository.Instance.SetNextTrack();
+                AppGlobal.Instance.ScoreRepository.Instance.SetNextTrack();
             }
 
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha1)) ScoreRepository.Instance.SetCurrentTrack(0);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha2)) ScoreRepository.Instance.SetCurrentTrack(1);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha3)) ScoreRepository.Instance.SetCurrentTrack(2);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha4)) ScoreRepository.Instance.SetCurrentTrack(3);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha5)) ScoreRepository.Instance.SetCurrentTrack(4);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha6)) ScoreRepository.Instance.SetCurrentTrack(5);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) ScoreRepository.Instance.SetCurrentTrack(6);
-            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) ScoreRepository.Instance.SetCurrentTrack(7);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha1)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(0);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha2)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(1);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha3)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(2);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha4)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(3);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha5)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(4);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha6)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(5);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(6);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(7);
 
 
             UpdateOffset();
@@ -146,13 +144,13 @@ namespace PicoGraffiti.Assets.Scripts
             }
             if (_scoreType == ScoreType.Melo)
             {
-                ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
+                AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
 
-                UIWavePlayer.Instance.OnWrite(value, ScoreRepository.Instance.CurrentTrack.WaveType);
+                UIWavePlayer.Instance.OnWrite(value, AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.WaveType);
             }
             else if (_scoreType == ScoreType.Volume)
             {
-                ScoreRepository.Instance.CurrentTrack.SetNoteVolume(index, value);
+                AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNoteVolume(index, value);
             }
 
             OnWrite.Invoke();
@@ -161,7 +159,7 @@ namespace PicoGraffiti.Assets.Scripts
 
         public void OnWriteOrEraseStartEvent(Vector2 pos)
         {
-            ScoreRepository.Commit();
+            AppGlobal.Instance.ScoreRepository.Commit();
         }
 
         public void OnWriteOrEraseEndEvent(Vector2 pos)
@@ -177,7 +175,7 @@ namespace PicoGraffiti.Assets.Scripts
             var index = (int) (pos.x + _offset);
             if (_scoreType == ScoreType.Melo)
             {
-                ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
+                AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
             }
 
             _CurrentTrack.Erase(index - (int)_offset);
@@ -199,7 +197,7 @@ namespace PicoGraffiti.Assets.Scripts
         private void ScoreApplyInternal()
         {
             UIHandler.UIScore.Instance.Clear();
-            foreach (var track in ScoreRepository.Instance.Score.Tracks)
+            foreach (var track in AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks)
             {
                 var uiTrack = UIHandler.UIScore.Instance.UITracks[track.Id].Instance;
                 for (var i = (int)_offset; i < UIHandler.UIScore.Instance.Width + (int)_offset; i++)
@@ -228,7 +226,7 @@ namespace PicoGraffiti.Assets.Scripts
 
         public int GetPlayingOffset()
         {
-            var bpmRate = 60.0 / (ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
+            var bpmRate = 60.0 / (AppGlobal.Instance.ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
             var len = bpmRate * Wave.SAMPLE_RATE;
             return (int) (UIWavePlayer.Instance.Index / len);
         }
