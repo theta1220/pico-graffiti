@@ -160,6 +160,11 @@ namespace PicoGraffiti.Assets.Scripts
         public void OnWriteOrEraseStartEvent(Vector2 pos)
         {
             AppGlobal.Instance.ScoreRepository.Commit();
+
+            if (_scoreType == ScoreType.Melo)
+            {
+                UIWavePlayer.Instance.OnWriteOn();
+            }
         }
 
         public void OnWriteOrEraseEndEvent(Vector2 pos)

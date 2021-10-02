@@ -43,6 +43,11 @@ namespace PicoGraffiti.UI
             _start = false;
         }
 
+        public void OnWriteOn()
+        {
+            Wave.ResetCount(AppGlobal.Instance.ScoreRepository.Instance.Score);
+        }
+
         public void OnWrite(double melo, WaveType waveType)
         {
             _touchNote.Melo = melo;
@@ -58,7 +63,6 @@ namespace PicoGraffiti.UI
         {
             _touchNote.Melo = -1;
             Wave.ResetCount(AppGlobal.Instance.ScoreRepository.Instance.Score);
-            Wave.ResetCount();
         }
 
         public void OnAudioFilterRead(float[] data, int channels)
@@ -69,7 +73,7 @@ namespace PicoGraffiti.UI
                 {
                     for (var ch = 0; ch < channels; ch++)
                     {
-                        data[i * channels + ch] = Wave.Calc(_touchNote, false, 1.0f, AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
+                        data[i * channels + ch] = Wave.Calc(_touchNote, false, 1.0f, AppGlobal.Instance.ScoreRepository.Instance.Score.Trans, ch == 0);
                     }
                 }
             }

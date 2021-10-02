@@ -10,7 +10,7 @@ namespace PicoGraffiti.UI
 {
     public class UILines : TunaBehaviour
     {
-        private const int SCALE = 2;
+        private const int SCALE = 1;
         [SerializeField] private RawImage _image;
         [SerializeField] private Color _lineColorW;
         [SerializeField] private Color _lineColorH;

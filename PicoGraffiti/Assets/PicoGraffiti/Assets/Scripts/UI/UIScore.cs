@@ -26,7 +26,7 @@ namespace PicoGraffiti.UI
             public Color[] Buffer;
         }
 
-        public const int SCALE = 4;
+        public const int SCALE = 1;
 
         [SerializeField] private RectTransform _rectTransform;
         [SerializeField] private Transform _tracks = null;
@@ -54,7 +54,7 @@ namespace PicoGraffiti.UI
         {
             UITracks = new Dictionary<ulong, Object<UITrack>>();
             _image = GetComponent<RawImage>();
-            Width = (int) GetComponent<RectTransform>().rect.width / SCALE;
+            Width = (int) _rectTransform.rect.width / SCALE;
             Height = (int) parentHeight / SCALE;
             _rectTransform.sizeDelta = new Vector2(_rectTransform.sizeDelta.x, Height * SCALE);
             _texture = new Texture2D(Width, Height);

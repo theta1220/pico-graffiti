@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Cysharp.Threading.Tasks;
 using SFB;
 using UnityEngine;
 
@@ -44,12 +45,14 @@ namespace PicoGraffiti.Framework
             }
         }
 
-        public void Export(ScoreRepository scoreRepository)
+        public async UniTask Export(ScoreRepository scoreRepository)
         {
+            await UniTask.SwitchToMainThread();
             var path = StandaloneFileBrowser.SaveFilePanel("Save", Application.persistentDataPath, "", "wav");
             if (string.IsNullOrEmpty(path)) return;
+            await UniTask.SwitchToThreadPool();
             
-            Wave.Save(scoreRepository.Score, path);
+            await Wave.SaveAsync(scoreRepository.Score, path);
         }
 
         public void Migration(ScoreRepository scoreRepository)
@@ -61,6 +64,17 @@ namespace PicoGraffiti.Framework
                 if (count == 0 || count == 1 || count == 2)
                 {
                     track.OverrideWaveType = WaveType.Square;
+                }
+
+                if (count == 6)
+                {
+                    track.WaveType = WaveType.Triangle;
+                    track.IsKick = true;
+                }
+
+                if (count == 5)
+                {
+                    track.IsChorus = true;
                 }
 
                 count++;

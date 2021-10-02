@@ -28,8 +28,8 @@ namespace PicoGraffiti
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square, false, true));
+            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Triangle, WaveType.None, true));
             Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Noise2));
         }
 

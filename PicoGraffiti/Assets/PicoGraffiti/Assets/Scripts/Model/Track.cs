@@ -14,12 +14,16 @@ namespace PicoGraffiti.Model
         public Dictionary<int, Note> Notes = null;
         public ulong Id { get; private set; }
         public Score ParentScore { get; set; }
-        public WaveType WaveType { get; private set; }
+        public WaveType WaveType { get; set; }
         public WaveType OverrideWaveType { get; set; }
+        public bool IsKick { get; set; }
+        public bool IsChorus { get; set; }
         
         [field: NonSerialized] public Wave Wave { get; set; }
 
-        public Track(ulong id, Score score, WaveType waveType, WaveType overrideWaveType = WaveType.None)
+        public Track(ulong id, Score score, WaveType waveType,
+            WaveType overrideWaveType = WaveType.None,
+            bool isKick = false, bool isChorus = false)
         {
             Id = id;
             Wave = new Wave(Id);
@@ -27,11 +31,13 @@ namespace PicoGraffiti.Model
             WaveType = waveType;
             Notes = new Dictionary<int, Note>();
             OverrideWaveType = overrideWaveType;
+            IsKick = isKick;
+            IsChorus = isChorus;
         }
 
         public Track DeepClone()
         {
-            var obj = new Track(Id, ParentScore, WaveType);
+            var obj = new Track(Id, ParentScore, WaveType, OverrideWaveType, IsKick, IsChorus);
             foreach (var note in Notes)
             {
                 obj.Notes.Add(note.Key, note.Value.DeepClone());

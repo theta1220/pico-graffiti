@@ -39,7 +39,7 @@ namespace PicoGraffiti.Assets.Scripts
             UIMain = await Tuna.Object<UIMain>.Create();
 
             UIScoreHandler = new UIHandler(UIMain.Instance.Content);
-            await UIScoreHandler.InitializeAsync(Wave.MELO_NUM, 2500);
+            await UIScoreHandler.InitializeAsync(Wave.MELO_NUM, 2500/4);
             UIVolumeHandler = new UIHandler(UIMain.Instance.VolumeRoot);
             await UIVolumeHandler.InitializeAsync(5, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().sizeDelta.y);
 
@@ -59,7 +59,7 @@ namespace PicoGraffiti.Assets.Scripts
                     value => AppGlobal.Instance.ScoreRepository.Instance.Score.BPM = (int) value).AddTo(_subscribers);
             
             Trans = await Tuna.Object<UIValue>.Create(UIMain.Instance.ScoreValuesRoot);
-            Trans.Instance.Initialize("Trans", AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
+            Trans.Instance.Initialize("KEY", AppGlobal.Instance.ScoreRepository.Instance.Score.Trans);
             Trans.Instance.OnEndEdit.Subscribe(
                 value => AppGlobal.Instance.ScoreRepository.Instance.Score.Trans = (int) value).AddTo(_subscribers);
 
@@ -121,7 +121,12 @@ namespace PicoGraffiti.Assets.Scripts
             // エクスポート
             if (ExclusiveInput.GetKeyDown(KeyCode.E))
             {
-                SaveDataManager.Export(AppGlobal.Instance.ScoreRepository.Instance);
+                UniTask.Run(async () =>
+                {
+                    await UIMain.Instance.Loading.ShowAsync();
+                    await SaveDataManager.Export(AppGlobal.Instance.ScoreRepository.Instance);
+                    await UIMain.Instance.Loading.Hide();
+                }).Forget();
             }
             
             // Undo Redo
@@ -183,6 +188,7 @@ namespace PicoGraffiti.Assets.Scripts
 
             if (ExclusiveInput.GetKeyDown(KeyCode.N))
             {
+                SaveDataManager.Save(AppGlobal.Instance.ScoreRepository.Instance, "temp.pg");
                 AppGlobal.Instance.Initialize();
                 ScoreHandler.Offset = 0;
                 VolumeHandler.Offset = 0;

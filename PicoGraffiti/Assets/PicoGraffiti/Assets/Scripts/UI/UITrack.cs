@@ -54,9 +54,8 @@ namespace PicoGraffiti.UI
         private void WritePixel(int x, int y)
         {
             WritePixelInternal(x, y);
-            WritePixelInternal(x + 1, y);
             WritePixelInternal(x, y + 1);
-            WritePixelInternal(x + 1, y + 1);
+            WritePixelInternal(x, y - 1);
         }
 
         private void WritePixelInternal(int x, int y)

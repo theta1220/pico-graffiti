@@ -10,9 +10,11 @@ namespace PicoGraffiti.UI
         [SerializeField] private Transform _content = null;
         [SerializeField] private Transform _volumeRoot = null;
         [SerializeField] private Transform _scoreValuesRoot = null;
+        [SerializeField] private UILoading _loading;
         public Transform Root => _root;
         public Transform Content => _content;
         public Transform VolumeRoot => _volumeRoot;
         public Transform ScoreValuesRoot => _scoreValuesRoot;
+        public UILoading Loading => _loading;
     }
 }
