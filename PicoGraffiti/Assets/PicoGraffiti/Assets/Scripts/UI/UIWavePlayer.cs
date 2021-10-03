@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using Tuna;
+using UnityEngine;
 
 namespace PicoGraffiti.UI
 {
@@ -11,14 +13,23 @@ namespace PicoGraffiti.UI
         private bool _start = false;
         private long _index = 0;
         private Note _touchNote = null;
+        
         public bool IsPlaying => _start;
         public long Index => _index;
+        public Tuna.Object<UIWaveMonitor> UIWaveMonitor { get; private set; }
 
         private Wave Wave => AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Wave;
 
-        public void Initialize()
+        public async UniTask InitializeAsync(Transform monitorParent)
         {
             _touchNote = new Note();
+            UIWaveMonitor = await Tuna.Object<UIWaveMonitor>.Create(monitorParent);
+            await UIWaveMonitor.Instance.InitializeAsync();
+        }
+
+        public void UpdateFrame()
+        {
+            UIWaveMonitor.Instance.UpdateFrame();
         }
 
         public void Play(long offset)
@@ -88,6 +99,8 @@ namespace PicoGraffiti.UI
                 }
                 _index++;
             }
+            
+            UIWaveMonitor.Instance.Stack(data);
         }
     }
 }

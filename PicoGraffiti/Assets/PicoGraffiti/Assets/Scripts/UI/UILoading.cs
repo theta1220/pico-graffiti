@@ -25,7 +25,6 @@ namespace PicoGraffiti.UI
         {
             await UniTask.SwitchToMainThread();
             gameObject.SetActive(_referenceCount > 0);
-            await UniTask.SwitchToThreadPool();
         }
     }
 }

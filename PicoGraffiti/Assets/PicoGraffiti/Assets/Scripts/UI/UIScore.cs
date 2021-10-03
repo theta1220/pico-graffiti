@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using PicoGraffiti.Model;
 using Tuna;
@@ -19,11 +20,6 @@ namespace PicoGraffiti.UI
             Write,
             Erase,
             Move,
-        }
-
-        public class TextureBuffer
-        {
-            public Color[] Buffer;
         }
 
         public const int SCALE = 1;
@@ -60,10 +56,8 @@ namespace PicoGraffiti.UI
             _texture = new Texture2D(Width, Height);
             _texture.filterMode = FilterMode.Point;
             _image.texture = _texture;
-            _textureBuffer = new TextureBuffer();
-            _textureBuffer.Buffer = new Color[Width * Height];
+            _textureBuffer = new TextureBuffer(Width, Height);
             UITracks.Clear();
-            UpdateTexture();
         }
 
         public async UniTask CreateTrackAsync(Track track)
@@ -82,12 +76,8 @@ namespace PicoGraffiti.UI
                 uiTrack.Value.Instance.UpdateFrame();
             }
 
-            if (_isUpdateTexture)
-            {
-                _texture.SetPixels(_textureBuffer.Buffer);
-                _texture.Apply();
-                _isUpdateTexture = false;
-            }
+            _texture.SetPixels(_textureBuffer.Buffer);
+            _texture.Apply();
         }
 
         public void OnDestroy()
@@ -168,18 +158,9 @@ namespace PicoGraffiti.UI
             return touchPos / SCALE;
         }
 
-        public void UpdateTexture()
-        {
-            _isUpdateTexture = true;
-        }
-
         public void Clear()
         {
-            var len = _textureBuffer.Buffer.Length;
-            for (var i = 0; i < len; i++)
-            {
-                _textureBuffer.Buffer[i].a = 0;
-            }
+            _textureBuffer.Clear();
         }
     }
 }

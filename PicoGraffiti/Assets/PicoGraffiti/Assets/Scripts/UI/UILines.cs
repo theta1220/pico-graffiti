@@ -32,6 +32,8 @@ namespace PicoGraffiti.UI
 
         public async UniTask InitializeAsync(float height, int num)
         {
+            await UniTask.SwitchToMainThread();
+            await UniTask.Yield();
             _num = num;
             
             var rect = _image.rectTransform;

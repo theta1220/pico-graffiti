@@ -70,13 +70,9 @@ namespace PicoGraffiti.Assets.Scripts
 
         public void UpdateFrame()
         {
+            UIHandler.UIScore.Instance.Clear();
             UIHandler.UpdateFrame();
-
-            if (_scoreApplyFlag)
-            {
-                ScoreApplyInternal();
-                _scoreApplyFlag = false;
-            }
+            ScoreApplyInternal();
 
             // UITrack切り替え
             if (ExclusiveInput.GetKeyDown(KeyCode.Tab))
@@ -92,8 +88,7 @@ namespace PicoGraffiti.Assets.Scripts
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha6)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(5);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(6);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(7);
-
-
+            
             UpdateOffset();
         }
 
@@ -153,6 +148,12 @@ namespace PicoGraffiti.Assets.Scripts
                 AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNoteVolume(index, value);
             }
 
+            // パーティクルをたまに生成する
+            if (Random.Range(0, 100) < 5)
+            {
+                UIHandler.UIScore.Instance.UITracks[AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Id].Instance.CreateParticle((int)pos.x, (int)pos.y, true);
+            }
+            
             OnWrite.Invoke();
             ScoreApply();
         }
@@ -212,11 +213,18 @@ namespace PicoGraffiti.Assets.Scripts
                         var note = track.Notes[i];
                         if (_scoreType == ScoreType.Melo) uiTrack.Write(i - (int)_offset, note.Melo);
                         else if (_scoreType == ScoreType.Volume) uiTrack.Write(i - (int)_offset, note.Vol);
+
+                        if (_scoreType == ScoreType.Melo && UIWavePlayer.Instance.IsPlaying && i - (int) _offset == 0)
+                        {
+                            for (var j = 0; j < 3; j++)
+                            {
+                                uiTrack.CreateParticle(0, (int)(uiTrack.Height * note.Melo), false);
+                            }
+                        }
                     }
                 }
             }
 
-            UIHandler.UIScore.Instance.UpdateTexture();
             UIHandler.UILines.Instance.OnMove(_offset);
         }
 

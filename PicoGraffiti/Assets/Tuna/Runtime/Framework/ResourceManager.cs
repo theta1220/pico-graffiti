@@ -36,6 +36,7 @@ namespace Tuna.Framework
             // 初ロード
             if (_loadedResourceTypes.Count(t => t == typeof(T)) == 1)
             {
+                await UniTask.SwitchToMainThread();
                 var res = await LoadInternalAsync<T>();
                 var info = new ResourceInfo(typeof(T), res);
                 _resourcePool.Add(info);

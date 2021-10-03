@@ -31,6 +31,7 @@ namespace PicoGraffiti.Assets.Scripts
 
         public async void Start()
         {
+            await UniTask.SwitchToMainThread();
             ResourceManager.Instance.Initialize();
             AppGlobal.Instance.Initialize();
 
@@ -44,7 +45,7 @@ namespace PicoGraffiti.Assets.Scripts
             await UIVolumeHandler.InitializeAsync(5, UIMain.Instance.VolumeRoot.GetComponent<RectTransform>().sizeDelta.y);
 
             UIWavePlayer = await Tuna.Object<UIWavePlayer>.Create();
-            UIWavePlayer.Instance.Initialize();
+            await UIWavePlayer.Instance.InitializeAsync(UIMain.Instance.Monitor);
 
             ScoreHandler = new ScoreHandler(ScoreHandler.ScoreType.Melo, UIScoreHandler, UIWavePlayer);
             await ScoreHandler.InitializeAsync();
@@ -100,6 +101,7 @@ namespace PicoGraffiti.Assets.Scripts
             VolumeHandler.UpdateFrame();
             UIScoreHandler.UpdateFrame();
             UIVolumeHandler.UpdateFrame();
+            UIWavePlayer.Instance.UpdateFrame();
 
             // ファイル
             if (ExclusiveInput.GetKeyDown(KeyCode.I))

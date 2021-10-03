@@ -18,8 +18,9 @@ namespace PicoGraffiti.UI
         public int Width = 0;
         public int Height = 0;
 
-        public UIScore.TextureBuffer TextureBuffer = null;
+        public TextureBuffer TextureBuffer = null;
         private bool _isUpdateTexture = false;
+        private UITrackParticle _particle = null;
 
         public UnityEvent<Vector2> OnPointerEvent { get; private set; } = new UnityEvent<Vector2>();
 
@@ -27,7 +28,7 @@ namespace PicoGraffiti.UI
         {
         }
 
-        public void InitializeTextureBuffer(UIScore.TextureBuffer textureBuffer, int width, int height)
+        public void InitializeTextureBuffer(TextureBuffer textureBuffer, int width, int height)
         {
             TextureBuffer = textureBuffer;
             Width = width;
@@ -38,6 +39,8 @@ namespace PicoGraffiti.UI
             {
                 TextureBuffer.Buffer[i] = Color.clear;
             }
+
+            _particle = new UITrackParticle(TextureBuffer);
         }
 
         public void SetNoteColor(Color color)
@@ -60,13 +63,7 @@ namespace PicoGraffiti.UI
 
         private void WritePixelInternal(int x, int y)
         {
-            var index = x + y * Width;
-            if (x == Width) return;
-            if (index < 0 || index >= TextureBuffer.Buffer.Length) return;
-            TextureBuffer.Buffer[index].r = _noteColor.r;
-            TextureBuffer.Buffer[index].g = _noteColor.g;
-            TextureBuffer.Buffer[index].b = _noteColor.b;
-            TextureBuffer.Buffer[index].a = 1;
+            TextureBuffer.Draw(x, y, ref _noteColor);
         }
 
         public void Erase(int index)
@@ -80,6 +77,12 @@ namespace PicoGraffiti.UI
 
         public void UpdateFrame()
         {
+            _particle.Update(ref _noteColor);
+        }
+
+        public void CreateParticle(int x, int y, bool isLow)
+        {
+            _particle.Create(x, y, isLow);
         }
     }
 }
