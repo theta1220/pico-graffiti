@@ -32,6 +32,7 @@ namespace PicoGraffiti.UI
 
         public void Stack(float[] value)
         {
+            if (_valueQueue == null) return;
             lock (_valueQueue)
             {
                 _valueQueue.Clear();

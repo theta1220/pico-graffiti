@@ -11,6 +11,7 @@ namespace PicoGraffiti
         public void Initialize()
         {
             ScoreRepository = new Version<ScoreRepository>();
+            ScoreRepository.Instance.Initialize();
         }
     }
 }

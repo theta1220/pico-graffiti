@@ -197,6 +197,26 @@ namespace PicoGraffiti.Assets.Scripts
                 ScoreHandler.ScoreApply();
                 VolumeHandler.ScoreApply();
             }
+
+            if (ExclusiveInput.GetKey(KeyCode.RightShift) || ExclusiveInput.GetKey(KeyCode.LeftShift))
+            {
+                if (ExclusiveInput.GetKeyDown(KeyCode.DownArrow))
+                {
+                    foreach (var note in AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Notes)
+                    {
+                        note.Value.Melo = (note.Value.Melo * 89 - 12) / 89;
+                    }
+                    ScoreHandler.ScoreApply();
+                }
+                if (ExclusiveInput.GetKeyDown(KeyCode.UpArrow))
+                {
+                    foreach (var note in AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.Notes)
+                    {
+                        note.Value.Melo = (note.Value.Melo * 89 + 12) / 89;
+                    }
+                    ScoreHandler.ScoreApply();
+                }
+            }
         }
 
         public long GetPlayOffset()

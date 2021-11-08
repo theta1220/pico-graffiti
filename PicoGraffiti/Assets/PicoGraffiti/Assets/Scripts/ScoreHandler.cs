@@ -88,6 +88,7 @@ namespace PicoGraffiti.Assets.Scripts
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha6)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(5);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(6);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(7);
+            if (ExclusiveInput.GetKeyDown(KeyCode.Alpha9)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(8);
             
             UpdateOffset();
         }
@@ -117,17 +118,25 @@ namespace PicoGraffiti.Assets.Scripts
                 }
             }
             // コードアルペジオ
-            if (ExclusiveInput.GetKey(KeyCode.F))
+            if (ExclusiveInput.GetKey(KeyCode.A))
             {
-                // var codes = new [] {"add9", "", "m", "", "m", "", "", "add9","", "m", "", "m-5"};
-                // var pattern = new int[] {0, 1, 2, 1, 3, 1, 2, 1};
-                // var patternIndex = 
-                //     Mathf.FloorToInt(index / (UIHandler.UIScore.Instance.Width / 16.0f)) % pattern.Length;
-                // var codeIndex = Mathf.RoundToInt((float)value * 89.0f) % codes.Length;
-                // var code = CodeGetter.Get(codes[codeIndex]);
-                // var add = code[pattern[patternIndex]];
-                // if (add == -1) add = 12;
-                // value = ((float) value * 89.0f + add) / 89;
+                for (var i = index; i < index * Track.NOTE_GRID_SIZE * 8 * 8; i++)
+                { 
+                    if (Mathf.FloorToInt(i / (Track.NOTE_GRID_SIZE / 16.0f)) % 8 >= 3)
+                    {
+                        return;
+                    }
+                    var codes = new [] {"", "", "m7", "", "m7", "", "", "","", "m", "", "m7"};
+                    var pattern = new int[] {0, 1, 2, 1, 3, 1, 2, 1};
+                    var patternIndex = 
+                        Mathf.FloorToInt(i / (Track.NOTE_GRID_SIZE / 2.0f)) % pattern.Length;
+                    var codeIndex = Mathf.RoundToInt((float)value * 89.0f) % codes.Length;
+                    var code = CodeGetter.Get(codes[codeIndex]);
+                    var add = code[pattern[patternIndex]];
+                    if (add == -1) add = 12;
+                    value = ((float) value * 89.0f + add) / 89;
+                    AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNote(i, value);
+                }
             } 
             // 高速アルペジオ
             if (ExclusiveInput.GetKey(KeyCode.F))

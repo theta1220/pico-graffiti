@@ -16,28 +16,46 @@ namespace PicoGraffiti.Model
         public Score ParentScore { get; set; }
         public WaveType WaveType { get; set; }
         public WaveType OverrideWaveType { get; set; }
+        public double OverrideWaveTime { get; set; }
+        public WaveType SecondOverrideWaveType { get; set; }
+        public double SecondOverrideWaveTime { get; set; }
         public bool IsKick { get; set; }
         public bool IsChorus { get; set; }
         
         [field: NonSerialized] public Wave Wave { get; set; }
 
-        public Track(ulong id, Score score, WaveType waveType,
-            WaveType overrideWaveType = WaveType.None,
-            bool isKick = false, bool isChorus = false)
+        public Track(
+            ulong id, Score score,
+            WaveType waveType,
+            WaveType overrideWaveType, double overrideWaveTime,
+            WaveType secondOverrideWaveType, double secondOverrideWaveTime,
+            bool isKick,
+            bool isChorus)
         {
             Id = id;
-            Wave = new Wave(Id);
             ParentScore = score;
             WaveType = waveType;
             Notes = new Dictionary<int, Note>();
             OverrideWaveType = overrideWaveType;
+            OverrideWaveTime = overrideWaveTime;
+            SecondOverrideWaveType = secondOverrideWaveType;
+            SecondOverrideWaveTime = secondOverrideWaveTime;
             IsKick = isKick;
             IsChorus = isChorus;
         }
 
+        public void Initialize()
+        {
+            Wave = new Wave(Id);
+        }
+
         public Track DeepClone()
         {
-            var obj = new Track(Id, ParentScore, WaveType, OverrideWaveType, IsKick, IsChorus);
+            var obj = new Track(
+                Id, ParentScore,
+                WaveType, OverrideWaveType, OverrideWaveTime,
+                SecondOverrideWaveType, SecondOverrideWaveTime,
+                IsKick, IsChorus);
             foreach (var note in Notes)
             {
                 obj.Notes.Add(note.Key, note.Value.DeepClone());

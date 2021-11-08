@@ -88,18 +88,17 @@ namespace PicoGraffiti.UI
                     }
                 }
             }
-            
-            if (!_start) return;
-
-            for (var i = 0; i < data.Length / channels; i++)
+            else if (_start)
             {
-                for (var ch = 0; ch < channels; ch++)
+                for (var i = 0; i < data.Length / channels; i++)
                 {
-                    data[i * channels + ch] = Wave.CreateWave(AppGlobal.Instance.ScoreRepository.Instance.Score, ch, _index);
+                    for (var ch = 0; ch < channels; ch++)
+                    {
+                        data[i * channels + ch] = Wave.CreateWave(AppGlobal.Instance.ScoreRepository.Instance.Score, ch, _index);
+                    }
+                    _index++;
                 }
-                _index++;
             }
-            
             UIWaveMonitor.Instance.Stack(data);
         }
     }

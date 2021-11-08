@@ -20,17 +20,85 @@ namespace PicoGraffiti
             Version = Application.version;
             Score = new Score();
             Identity = new Identity();
-            var track = new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square);
-            Score.Tracks.Add(track);
-            CurrentTrack = track;
 
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Square25, WaveType.Square, false, true));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Triangle, WaveType.None, true));
-            Score.Tracks.Add(new Track(Identity.Get(), Score, WaveType.Noise2));
+            // 主旋律
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square25,
+                WaveType.None,0,
+                WaveType.None, 0,
+                false, false));
+            
+            // ベース
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square25,
+                WaveType.Square125,10,
+                WaveType.None, 0,
+                false, false));
+            
+            // ハモリ
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square25,
+                WaveType.Square,15,
+                WaveType.None, 0,
+                false, false));
+            
+            // ギター的なやつ
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square25,
+                WaveType.Square125,15,
+                WaveType.None, 0,
+                false, false));
+            
+            // ギター的なやつ２
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square125,
+                WaveType.Square,10,
+                WaveType.Square25, 20,
+                false, false));
+            
+            // アルペジオくん
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Square,
+                WaveType.None,0,
+                WaveType.None, 0,
+                false, true));
+            
+            // キック
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Triangle,
+                WaveType.None,0,
+                WaveType.None, 0,
+                true, false));
+            
+            // ノイズ
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Noise2,
+                WaveType.None,0,
+                WaveType.None, 0,
+                false, false));
+            
+            // ノイズ
+            Score.Tracks.Add(new Track(
+                Identity.Get(), Score,
+                WaveType.Noise,
+                WaveType.None,0,
+                WaveType.None, 0,
+                false, false));
+
+            CurrentTrack = Score.Tracks.First();
+        }
+
+        public void Initialize()
+        {
+            Score.Initialize();
         }
 
         public void SetNextTrack()
@@ -49,6 +117,7 @@ namespace PicoGraffiti
             obj.Identity = Identity.DeepClone();
             obj.Score = Score.DeepClone();
             obj.CurrentTrack = obj.Score.Tracks.First(_ => CurrentTrack.Id == _.Id);
+            obj.Initialize();
             return obj;
         }
     }

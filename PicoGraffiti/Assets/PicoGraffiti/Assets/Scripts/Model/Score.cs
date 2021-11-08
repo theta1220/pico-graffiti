@@ -18,6 +18,14 @@ namespace PicoGraffiti.Model
             return Tracks.Max(track => track.GetSize());
         }
 
+        public void Initialize()
+        {
+            foreach (var track in Tracks)
+            {
+                track.Initialize();
+            }
+        }
+
         public Score DeepClone()
         {
             var obj = new Score();

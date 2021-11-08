@@ -121,7 +121,8 @@ namespace PicoGraffiti.UI
                 }
                 for (var i = 0; i < Height; i++)
                 {
-                    Write((int)pos, i, _lineColorH);
+                    if(i % 2 == 0) continue;
+                    // Write((int)pos, i, _lineColorH);
                 }
                 if (count % 32 == 0)
                 {
@@ -144,6 +145,7 @@ namespace PicoGraffiti.UI
                 {
                     for (var i = 0; i < Height; i++)
                     {
+                        if(i % 2 == 0) continue;
                         Write((int)pos + 0, i, _lineColorW);
                     }
                 }

@@ -25,25 +25,18 @@ namespace PicoGraffiti.Framework
         System.Random _random = new System.Random();
 
         private ulong _trackId;
-
-        Track Track
-        {
-            get
-            {
-                return AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks.FirstOrDefault(_ => _.Id == _trackId);
-            }
-        }
+        private Track _track;
+        
+        public Track Track => _track;
 
         public Wave(ulong trackId)
         {
             _trackId = trackId;
+            _track = AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks.FirstOrDefault(_ => _.Id == _trackId);
             
             _rCounters = new[]
             {
                 new RCounter(this, 0, 1, 1),
-                new RCounter(this, 1, 1, 1),
-                new RCounter(this, 2, 1, 1),
-                new RCounter(this, 3, 1, 1),
             };
         }
 
@@ -98,9 +91,10 @@ namespace PicoGraffiti.Framework
             foreach (var track in score.Tracks)
             {
                 var vol = 1.0f;
-                if (count == 0 || count == 1 || count == 3) vol = 1.3f;
-                if (count == 6) vol = 3.5f;
-                if (count == 7) vol = 1.0f;
+                if (count == 0) vol = 3.0f;
+                if (count == 1) vol = 1.0f;
+                if (count == 6) vol = 2.0f;
+                if (count == 7) vol = 0.4f;
                 wave += track.Wave.Calc(track.GetNote(index), false, vol, track.ParentScore.Trans, ch == 0);
                 count++;
             }
@@ -143,8 +137,10 @@ namespace PicoGraffiti.Framework
             private int _overrideCount = 0;
             private int _kickCount = 0;
             private int _chorusCount = 0;
+            private int _attackCount = 0;
 
             private Wave _wave = null;
+            private Track _track = null;
 
             public RCounter(Wave wave, int index, int rate, float vol)
             {
@@ -155,46 +151,84 @@ namespace PicoGraffiti.Framework
 
                 _overrideCount = 0;
                 _kickCount = 0;
+                _attackCount = 0;
+
+                _track = _wave.Track;
             }
 
             public float Calc(Wave wave, Note note, float vol, int trans, bool R)
             {
                 // 音階周波数
-                if (note.WaveType == WaveType.Noise2 || note.WaveType == WaveType.Noise || wave.Track.IsKick)
+                if (note.WaveType == WaveType.Noise2 || note.WaveType == WaveType.Noise || _track.IsKick)
                 {
                     trans = 0;
                 }
 
+                var bpmRate = 60.0 / (_track.ParentScore.BPM * Model.Track.NOTE_GRID_SIZE);
                 var freq = A0 * Math.Pow(SCALE_FREQ, note.Melo * 89 + trans);
 
                 // 周波数
-                var r = SAMPLE_RATE / freq * 4 + (R ? _currentR * 0.01 : 0);
+                var r = SAMPLE_RATE / freq * 4;
                 
                 // Chorus
-                if (_wave.Track.IsChorus)
+                if (_track.IsChorus)
                 {
-                    var bpmRate = 60.0 / (_wave.Track.ParentScore.BPM * Model.Track.NOTE_GRID_SIZE);
-                    var len = bpmRate * SAMPLE_RATE;
-                    var i = _chorusCount / len / 10;
-
-                    if ((int)i % 2 == 0)
-                    {
-                        r *= 2;
-                    }
                     _chorusCount++;
                 }
                 
                 // キック
-                if (wave.Track.IsKick)
+                if (_track.IsKick)
                 {
-                    var t = _kickCount / (double) Wave.SAMPLE_RATE;
-                    var s = Math.Pow(t * 10, 2) * 500;
-                    r += s;
                     _kickCount++;
                 }
+
+                // 波形オーバーライド
+                var waveType = note.WaveType;
+                if (_track.OverrideWaveType != WaveType.None && 
+                    _overrideCount < SAMPLE_RATE * bpmRate * _track.OverrideWaveTime)
+                {
+                    waveType = _track.OverrideWaveType;
+                    _overrideCount++;
+                }
+                // 波形オーバーライド２
+                else if (_track.SecondOverrideWaveType != WaveType.None && 
+                         _overrideCount < SAMPLE_RATE * bpmRate * _track.SecondOverrideWaveTime)
+                {
+                    waveType = _track.SecondOverrideWaveType;
+                    _overrideCount++;
+                } 
                 
+                // アタック
+                var attack = (float) (1 - _attackCount / ((float) SAMPLE_RATE * bpmRate * 80)) * 0.5f;
+                if (attack < 0) attack = 0;
+                vol *= 1.0f + attack;
+                _attackCount++;
+                
+                // 周波数Update
                 if (_count >= (long) _currentR)
                 {
+                    if (_wave.Track.IsChorus)
+                    {
+                        var len = bpmRate * SAMPLE_RATE;
+                        var i = _chorusCount / len / 10;
+
+                        if ((int) i % 2 == 0)
+                        {
+                            r = r * 2;
+                            if (R) vol *= 1.4f;
+                        }
+                        else
+                        {
+                            if (!R) vol *= 1.4f;
+                        }
+                    }
+
+                    if (wave.Track.IsKick)
+                    {
+                        var t = _kickCount / (double) Wave.SAMPLE_RATE;
+                        var s = Mathf.Pow((float)t * 10, 2) * 500;
+                        r += s;
+                    }
                     _currentR = r * _rate;
                     _count = 0;
                 }
@@ -203,25 +237,7 @@ namespace PicoGraffiti.Framework
                     _count++;
                 }
 
-                // 波形オーバーライド
-                var waveType = note.WaveType;
-                if (_overrideCount < SAMPLE_RATE * 0.125 && waveType == WaveType.Square25)
-                {
-                    var track = _wave.Track;
-                    if (track == null)
-                    {
-                        waveType = WaveType.Square;
-                    }
-                    else if (track.OverrideWaveType != WaveType.None)
-                    {
-                        waveType = track.OverrideWaveType;
-                    }
-
-                    vol *= 1.8f;
-                    _overrideCount++;
-                }
-
-                return wave.CalcWave(_currentR, _count, waveType, (float) note.Vol * 0.2f * _vol * vol * 0.8f);
+                return wave.CalcWave(_currentR, _count, waveType, (float) note.Vol * 0.2f * _vol * vol * 1.6f);
             }
 
             public void ResetCount()
@@ -231,30 +247,35 @@ namespace PicoGraffiti.Framework
                 _kickCount = 0;
                 _currentR = 0;
                 _chorusCount = 0;
+                _attackCount = 0;
             }
 
             public void ResetOverrideCount()
             {
                 _overrideCount = 0;
                 _kickCount = 0;
-                _count = 0;
-                _currentR = 0;
+                _attackCount = 0;
+                if (_wave.Track.IsKick)
+                {
+                    _count = 0;
+                    _currentR = 0;
+                }
                 _chorusCount = 0;
             }
         }
 
-        public float Calc(Note note, bool isCode = false, float vol = 1.0f, int trans = 0, bool R = false)
+        public float Calc(Note note, bool isCode, float vol, int trans, bool R)
         {
             var curNote = note;
             if (note == null)
             {
                 if (_prevNote != null)
                 {
-                    _vol = (float) _prevNote.Vol * (_prevNote.WaveType == WaveType.Noise2 ? 0.3f : 1.0f);
+                    _vol = (float) _prevNote.Vol * (_prevNote.WaveType == WaveType.Noise2 ? 0.5f : 1.0f); 
                 }
 
                 curNote = _currentNote;
-                _vol -= 0.000007f;
+                _vol -= 0.000004f;
                 if (_vol < 0)
                 {
                     _vol = 0;
@@ -262,7 +283,6 @@ namespace PicoGraffiti.Framework
             }
             else
             {
-                _vol = 1.0f;
                 if (_prevNote == null)
                 {
                     foreach (var rCounter in _rCounters)
@@ -270,6 +290,7 @@ namespace PicoGraffiti.Framework
                         rCounter.ResetOverrideCount();
                     } 
                 }
+                _vol = 1.0f;
             }
 
             _prevNote = note;
@@ -280,10 +301,7 @@ namespace PicoGraffiti.Framework
             var count = 0;
             foreach (var rCounter in _rCounters)
             {
-                if (count == 0 || isCode)
-                {
-                    buf += rCounter.Calc(this, curNote, _vol * vol, trans, R);
-                }
+                buf += rCounter.Calc(this, curNote, _vol * vol, trans, R);
 
                 count++;
             }
@@ -295,8 +313,6 @@ namespace PicoGraffiti.Framework
         float CalcWave(double r, long count, WaveType waveType, float vol)
         {
             float buff = 0;
-            var R = 300000;
-            var C = 0.00001;
             // 位相
             var diff = 2 * Mathf.PI / count;
             switch (waveType)
@@ -304,48 +320,28 @@ namespace PicoGraffiti.Framework
                 case WaveType.Square:
                 {
                     // ハイパスフィルターをかけてる
-                    var duty = 0.5;
-                    var t = count % r / r;
-                    var s = (t > duty ? 1 : -1);
-                    var d = (s == 1) ? 0 : duty;
-                    var f = 1 / (1 + R * C * (t + d)) * s;
-                    buff = (float) (f * vol * 2);
+                    buff = Hipath(0.5, count, r, vol);
                     break;
                 }
 
                 case WaveType.Square125:
                 {
                     // ハイパスフィルターをかけてる
-                    var duty = 0.125;
-                    var t = count % r / r;
-                    var s = (t > duty ? 1 : -1);
-                    var d = (s == 1) ? 0 : duty;
-                    var f = 1 / (1 + R * C * (t + d)) * s;
-                    buff = (float) (f * vol * 2);
+                    buff = Hipath(0.125, count, r, vol);
                     break;
                 }
 
                 case WaveType.Square25:
                 {
                     // ハイパスフィルターをかけてる
-                    var duty = 0.25;
-                    var t = count % r / r;
-                    var s = (t > duty ? 1 : -1);
-                    var d = (s == 1) ? 0 : duty;
-                    var f = 1 / (1 + R * C * (t + d)) * s;
-                    buff = (float) (f * vol * 2);
+                    buff = Hipath(0.25, count, r, vol);
                     break;
                 }
 
                 case WaveType.Square75:
                 {
                     // ハイパスフィルターをかけてる
-                    var duty = 0.75;
-                    var t = count % r / r;
-                    var s = (t > duty ? 1 : -1);
-                    var d = (s == 1) ? 0 : duty;
-                    var f = 1 / (1 + R * C * (t + d)) * s;
-                    buff = (float) (f * vol * 2);
+                    buff = Hipath(0.75, count, r, vol);
                     break;
                 }
 
@@ -382,9 +378,20 @@ namespace PicoGraffiti.Framework
                 }
             }
 
-            return buff;
+            return buff;  
         }
 
+        public float Hipath(double duty, long count, double r, float vol)
+        {
+            var R = -1.0;
+            var t = count % r / r;
+            var s = (t > duty ? 1 : -1);
+            var d = (s == 1) ? 0.00001f : duty;
+            var f = t / (t + (1 / R)) * s;
+            var buff = (float) (s * vol * 0.4);
+            return buff;
+        }
+  
         public float GetWhiteNoise(double t, float vol)
         {
             return (float) (_random.NextDouble() * 2 - 1) * vol;

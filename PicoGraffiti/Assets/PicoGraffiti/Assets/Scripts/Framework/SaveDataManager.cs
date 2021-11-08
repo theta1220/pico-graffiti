@@ -61,22 +61,6 @@ namespace PicoGraffiti.Framework
             foreach (var track in scoreRepository.Score.Tracks)
             {
                 track.Wave = new Wave(track.Id);
-                if (count == 0 || count == 1 || count == 2)
-                {
-                    track.OverrideWaveType = WaveType.Square;
-                }
-
-                if (count == 6)
-                {
-                    track.WaveType = WaveType.Triangle;
-                    track.IsKick = true;
-                }
-
-                if (count == 5)
-                {
-                    track.IsChorus = true;
-                }
-
                 count++;
             }
         }

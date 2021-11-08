@@ -150,7 +150,7 @@ namespace OrionComp
                 var v = bins[i];
                 if (v > 0)
                 {
-                    db = Mathf.Log10(v) * 20f;
+                    db = Mathf.Log(v) * 20f;
                     if (db < minDb)
                     {
                         db = minDb;
