@@ -31,3 +31,6 @@ OS
 - Windows11
 - Windows10
 - Ubuntu 20.04 (LTS)
+
+## 最新版ダウンロード
+https://github.com/theta1220/pico-graffiti/releases/tag/2021-10-03
