@@ -25,33 +25,33 @@ namespace PicoGraffiti
             Score.Tracks.Add(new Track(
                 Identity.Get(), Score,
                 WaveType.Square25,
-                WaveType.None,0,
+                WaveType.Square,10,
                 WaveType.None, 0,
-                false, false));
+                false, false, false, 2, 0));
             
-            // ベース
+            // ベース（コード）
             Score.Tracks.Add(new Track(
                 Identity.Get(), Score,
-                WaveType.Square25,
-                WaveType.Square125,10,
+                WaveType.Square125,
+                WaveType.Square25,10,
                 WaveType.None, 0,
-                false, false));
+                false, false, true, 4, 0));
             
             // ハモリ
             Score.Tracks.Add(new Track(
                 Identity.Get(), Score,
-                WaveType.Square25,
+                WaveType.Square,
                 WaveType.Square,15,
                 WaveType.None, 0,
-                false, false));
+                false, false, false, 2, 0.2));
             
-            // ギター的なやつ
+            // コード
             Score.Tracks.Add(new Track(
                 Identity.Get(), Score,
-                WaveType.Square25,
-                WaveType.Square125,15,
+                WaveType.Square125,
+                WaveType.Square25,15,
                 WaveType.None, 0,
-                false, false));
+                false, false, true, 2, 0));
             
             // ギター的なやつ２
             Score.Tracks.Add(new Track(
@@ -59,7 +59,7 @@ namespace PicoGraffiti
                 WaveType.Square125,
                 WaveType.Square,10,
                 WaveType.Square25, 20,
-                false, false));
+                false, false, false, 3, -0.3));
             
             // アルペジオくん
             Score.Tracks.Add(new Track(
@@ -67,7 +67,7 @@ namespace PicoGraffiti
                 WaveType.Square,
                 WaveType.None,0,
                 WaveType.None, 0,
-                false, true));
+                false, true, false, 1,-0.4));
             
             // キック
             Score.Tracks.Add(new Track(
@@ -75,7 +75,7 @@ namespace PicoGraffiti
                 WaveType.Triangle,
                 WaveType.None,0,
                 WaveType.None, 0,
-                true, false));
+                true, false, false, 1, 0));
             
             // ノイズ
             Score.Tracks.Add(new Track(
@@ -83,7 +83,7 @@ namespace PicoGraffiti
                 WaveType.Noise2,
                 WaveType.None,0,
                 WaveType.None, 0,
-                false, false));
+                false, false, false, 1,0.1));
             
             // ノイズ
             Score.Tracks.Add(new Track(
@@ -91,7 +91,7 @@ namespace PicoGraffiti
                 WaveType.Noise,
                 WaveType.None,0,
                 WaveType.None, 0,
-                false, false));
+                false, false, false, 1,-0.1));
 
             CurrentTrack = Score.Tracks.First();
         }

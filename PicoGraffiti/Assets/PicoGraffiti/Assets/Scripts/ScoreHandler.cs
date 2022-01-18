@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Linq;
+using Cysharp.Threading.Tasks;
 using PicoGraffiti.Framework;
 using PicoGraffiti.Model;
 using PicoGraffiti.UI;
@@ -30,6 +31,7 @@ namespace PicoGraffiti.Assets.Scripts
         public UnityEvent OnWrite = new UnityEvent();
         public UnityEvent OnErase = new UnityEvent();
         public UnityEvent<float> OnMove = new UnityEvent<float>();
+        public UnityEvent<float, float> OnSlide = new UnityEvent<float, float>();
 
         private TunaCompositeDisposable _subscribers = TunaCompositeDisposable.Create();
         private float _offset = 0;
@@ -61,6 +63,7 @@ namespace PicoGraffiti.Assets.Scripts
             UIHandler.UIScore.Instance.OnWriteOrEraseEndEvent.Subscribe(OnWriteOrEraseEndEvent).AddTo(_subscribers);
             UIHandler.UIScore.Instance.OnEraseEvent.Subscribe(OnEraseEvent).AddTo(_subscribers);
             UIHandler.UIScore.Instance.OnMoveEvent.Subscribe(OnMoveEvent).AddTo(_subscribers);
+            UIHandler.UIScore.Instance.OnSlideEvent.Subscribe(OnSlideEvent).AddTo(_subscribers);
         }
 
         public void Dispose()
@@ -89,6 +92,11 @@ namespace PicoGraffiti.Assets.Scripts
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha7)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(6);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha8)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(7);
             if (ExclusiveInput.GetKeyDown(KeyCode.Alpha9)) AppGlobal.Instance.ScoreRepository.Instance.SetCurrentTrack(8);
+
+            if (ExclusiveInput.GetKeyDown(KeyCode.U))
+            {
+                AutoGenerator.Generate();
+            }
             
             UpdateOffset();
         }
@@ -104,6 +112,20 @@ namespace PicoGraffiti.Assets.Scripts
             if (ExclusiveInput.GetKey(KeyCode.G) || ExclusiveInput.GetKey(KeyCode.F))
             {
                 value = Mathf.Round((float)value * 89.0f) / 89.0;
+
+                var melo = Mathf.RoundToInt((float)value * 89 % 12);
+                while (!Wave.isSharp(melo))
+                {
+                    value = (value * 89 - 1) / 89;
+                    melo = Mathf.RoundToInt((float)value * 89 % 12);
+                }
+            }
+            // １オクターブ上げる
+            if (ExclusiveInput.GetKey(KeyCode.R))
+            {
+                var note = AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.GetNote(index);
+                if (note == null) return;
+                note.Melo = (note.Melo * 89 + 12) / 89;
             }
             // ノイズ用
             if (ExclusiveInput.GetKey(KeyCode.D))
@@ -148,9 +170,22 @@ namespace PicoGraffiti.Assets.Scripts
             }
             if (_scoreType == ScoreType.Melo)
             {
-                AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
+                if (ExclusiveInput.GetKey(KeyCode.G))
+                {
+                    var size = Track.NOTE_GRID_SIZE / 8;
+                    index = index / size * size;
+                    for (var i = 0; i < size; i++)
+                    {
+                        AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNote(index + i, value);
+                    }
+                }
+                else
+                {
+                    AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.SetNote(index, value);
+                }
 
-                UIWavePlayer.Instance.OnWrite(value, AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.WaveType);
+                var track = AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack;
+                UIWavePlayer.Instance.OnWrite(value, track.WaveType, track.IsCode);
             }
             else if (_scoreType == ScoreType.Volume)
             {
@@ -188,7 +223,17 @@ namespace PicoGraffiti.Assets.Scripts
         public void OnEraseEvent(Vector2 pos)
         {
             var index = (int) (pos.x + _offset);
-            if (_scoreType == ScoreType.Melo)
+            
+            if (ExclusiveInput.GetKey(KeyCode.G))
+            {
+                var size = Track.NOTE_GRID_SIZE / 8;
+                index = index / size * size;
+                for (var i = 0; i < size; i++)
+                {
+                    AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.RemoveNote(index + i);
+                }
+            }
+            else
             {
                 AppGlobal.Instance.ScoreRepository.Instance.CurrentTrack.RemoveNote(index);
             }
@@ -202,6 +247,13 @@ namespace PicoGraffiti.Assets.Scripts
             _offset -= dir.x - UIHandler.UIScore.Instance.PrevPos.x;
             if (_offset < 0) _offset = 0;
             OnMove.Invoke(_offset);
+        }
+
+        public void OnSlideEvent(Vector2 pos)
+        {
+            var move = pos.x - UIHandler.UIScore.Instance.PrevPos.x;
+            SlideScore(pos.x, move);
+            OnSlide.Invoke(pos.x, move);
         }
 
         public void ScoreApply()
@@ -251,6 +303,35 @@ namespace PicoGraffiti.Assets.Scripts
             var bpmRate = 60.0 / (AppGlobal.Instance.ScoreRepository.Instance.Score.BPM * Track.NOTE_GRID_SIZE);
             var len = bpmRate * Wave.SAMPLE_RATE;
             return (int) (UIWavePlayer.Instance.Index / len);
+        }
+
+        /// <summary>
+        /// x以降のnoteを移動させます
+        /// </summary>
+        public void SlideScore(float x, float move)
+        {
+            var index = (int) (x + _offset);
+            var movedIndex = move > 0 ? Mathf.CeilToInt(move) : Mathf.RoundToInt(move);
+            if (movedIndex == 0) return;
+            foreach (var track in AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks)
+            {
+                var notes = track.Notes.ToList();
+                notes.Sort((a, b) => a.Key - b.Key);
+                if (movedIndex > 0)
+                {
+                    notes.Reverse();
+                }
+                foreach (var note in notes)
+                {
+                    if(note.Key < index) continue;
+                    
+                    var value = note.Value;
+                    var newIndex = note.Key + movedIndex;
+                    track.Notes.Remove(note.Key);
+                    track.Notes.Remove(newIndex);
+                    track.Notes.Add(newIndex, value);
+                }
+            }
         }
     }
 }

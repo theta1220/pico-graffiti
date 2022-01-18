@@ -70,6 +70,8 @@ namespace PicoGraffiti.Assets.Scripts
             VolumeHandler.OnErase.Subscribe(OnEraseEvent).AddTo(_subscribers);
             ScoreHandler.OnMove.Subscribe(OnMoveEvent).AddTo(_subscribers);
             VolumeHandler.OnMove.Subscribe(OnMoveEvent).AddTo(_subscribers);
+            ScoreHandler.OnSlide.Subscribe(OnSlideEvent).AddTo(_subscribers);
+            VolumeHandler.OnSlide.Subscribe(OnSlideEvent).AddTo(_subscribers);
 
             _isSetupEnd = true;
         }
@@ -243,6 +245,12 @@ namespace PicoGraffiti.Assets.Scripts
             ScoreHandler.Offset = offset;
             VolumeHandler.Offset = offset;
             
+            ScoreHandler.ScoreApply();
+            VolumeHandler.ScoreApply();
+        }
+
+        public void OnSlideEvent(float x, float move)
+        {
             ScoreHandler.ScoreApply();
             VolumeHandler.ScoreApply();
         }

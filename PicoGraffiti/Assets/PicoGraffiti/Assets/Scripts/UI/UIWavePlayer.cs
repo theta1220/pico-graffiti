@@ -13,6 +13,7 @@ namespace PicoGraffiti.UI
         private bool _start = false;
         private long _index = 0;
         private Note _touchNote = null;
+        private bool _isCode = false;
         
         public bool IsPlaying => _start;
         public long Index => _index;
@@ -59,10 +60,11 @@ namespace PicoGraffiti.UI
             Wave.ResetCount(AppGlobal.Instance.ScoreRepository.Instance.Score);
         }
 
-        public void OnWrite(double melo, WaveType waveType)
+        public void OnWrite(double melo, WaveType waveType, bool isCode)
         {
             _touchNote.Melo = melo;
             _touchNote.WaveType = waveType;
+            _isCode = isCode;
 
             if (IsPlaying)
             {
@@ -84,7 +86,7 @@ namespace PicoGraffiti.UI
                 {
                     for (var ch = 0; ch < channels; ch++)
                     {
-                        data[i * channels + ch] = Wave.Calc(_touchNote, false, 1.0f, AppGlobal.Instance.ScoreRepository.Instance.Score.Trans, ch == 0);
+                        data[i * channels + ch] = Wave.Calc(_touchNote, _isCode, 1.0f, AppGlobal.Instance.ScoreRepository.Instance.Score.Trans, ch == 0);
                     }
                 }
             }

@@ -20,6 +20,7 @@ namespace PicoGraffiti.UI
             Write,
             Erase,
             Move,
+            Slide,
         }
 
         public const int SCALE = 1;
@@ -34,6 +35,7 @@ namespace PicoGraffiti.UI
         public UnityEvent<Vector2> OnWriteOrEraseStartEvent { get; private set; } = new UnityEvent<Vector2>();
         public UnityEvent<Vector2> OnWriteOrEraseEndEvent { get; private set; } = new UnityEvent<Vector2>();
         public UnityEvent<Vector2> OnMoveEvent { get; private set; } = new UnityEvent<Vector2>();
+        public UnityEvent<Vector2> OnSlideEvent { get; private set; } = new UnityEvent<Vector2>();
         public Vector2 PrevPos { get; private set; }
         public List<Color> NoteColors => _noteColors;
         public int Width { get; private set; }
@@ -95,11 +97,15 @@ namespace PicoGraffiti.UI
             if (_state == State.None)
             {
                 if (ExclusiveInput.GetKey(KeyCode.RightShift) || ExclusiveInput.GetKey(KeyCode.LeftShift)) _state = State.Move;
+                else if (ExclusiveInput.GetKey(KeyCode.V)) _state = State.Slide;
                 else if (Input.GetMouseButtonDown(0)) _state = State.Write;
                 else if (Input.GetMouseButtonDown(1)) _state = State.Erase;
             }
-            
-            if(_state == State.Write || _state == State.Erase) OnWriteOrEraseStartEvent.Invoke(GetTouchPosition(eventData));
+
+            if (_state == State.Write || _state == State.Erase || _state == State.Slide)
+            {
+                OnWriteOrEraseStartEvent.Invoke(GetTouchPosition(eventData));
+            }
             PrevPos = GetTouchPosition(eventData);
             OnDrag(eventData);
             if (_state == State.Write) OnWriteEvent.Invoke(PrevPos);
@@ -108,7 +114,10 @@ namespace PicoGraffiti.UI
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            if (_state == State.Write || _state == State.Erase) OnWriteOrEraseEndEvent.Invoke(eventData.position);
+            if (_state == State.Write || _state == State.Erase || _state == State.Slide)
+            {
+                OnWriteOrEraseEndEvent.Invoke(eventData.position);
+            }
             _state = State.None;
         }
 
@@ -144,6 +153,11 @@ namespace PicoGraffiti.UI
                 case State.Move:
                 {
                     OnMoveEvent.Invoke(touchPos);
+                    break;
+                }
+                case State.Slide:
+                {
+                    OnSlideEvent.Invoke(touchPos);
                     break;
                 }
             }

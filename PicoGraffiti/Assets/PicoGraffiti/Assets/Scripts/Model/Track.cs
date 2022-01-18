@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using PicoGraffiti.Framework;
 using Stocker.Framework;
+using UnityEngine;
 
 namespace PicoGraffiti.Model
 {
@@ -21,6 +22,9 @@ namespace PicoGraffiti.Model
         public double SecondOverrideWaveTime { get; set; }
         public bool IsKick { get; set; }
         public bool IsChorus { get; set; }
+        public bool IsCode { get; set; }
+        public int Harmony { get; set; }
+        public double Pan { get; set; }
         
         [field: NonSerialized] public Wave Wave { get; set; }
 
@@ -30,7 +34,10 @@ namespace PicoGraffiti.Model
             WaveType overrideWaveType, double overrideWaveTime,
             WaveType secondOverrideWaveType, double secondOverrideWaveTime,
             bool isKick,
-            bool isChorus)
+            bool isChorus,
+            bool isCode,
+            int harmony,
+            double pan)
         {
             Id = id;
             ParentScore = score;
@@ -42,6 +49,9 @@ namespace PicoGraffiti.Model
             SecondOverrideWaveTime = secondOverrideWaveTime;
             IsKick = isKick;
             IsChorus = isChorus;
+            IsCode = isCode;
+            Harmony = harmony;
+            Pan = pan;
         }
 
         public void Initialize()
@@ -55,7 +65,7 @@ namespace PicoGraffiti.Model
                 Id, ParentScore,
                 WaveType, OverrideWaveType, OverrideWaveTime,
                 SecondOverrideWaveType, SecondOverrideWaveTime,
-                IsKick, IsChorus);
+                IsKick, IsChorus, IsCode, Harmony, Pan);
             foreach (var note in Notes)
             {
                 obj.Notes.Add(note.Key, note.Value.DeepClone());
@@ -106,6 +116,18 @@ namespace PicoGraffiti.Model
         {
             var bpmRate = 60.0 / (ParentScore.BPM * NOTE_GRID_SIZE);
             var len = bpmRate * Wave.SAMPLE_RATE;
+            // var swingRate = 1.0;
+            // var swingSize = 16.0;
+            // if (index / len % NOTE_GRID_SIZE < NOTE_GRID_SIZE / 2.0)
+            // {
+            //     index = (long)(Math.Floor(index / (len * NOTE_GRID_SIZE)) * (len * NOTE_GRID_SIZE)
+            //                    + index % (len * NOTE_GRID_SIZE) * ((swingSize - swingRate) / swingSize));
+            // }
+            // else
+            // {
+            //     index = (long)(Math.Floor(index / (len * NOTE_GRID_SIZE)) * (len * NOTE_GRID_SIZE)
+            //                    + index % (len * NOTE_GRID_SIZE) * ((swingSize + swingRate) / swingSize));
+            // }
             var i = (int)(index / len);
             if (!Notes.ContainsKey(i)) return null;
             return Notes[i];
@@ -114,7 +136,7 @@ namespace PicoGraffiti.Model
         public int GetSize()
         {
             if (Notes.Count == 0) return 0;
-            return Notes.Last().Key;
+            return Notes.Max(_ => _.Key);
         }
     }
 }

@@ -114,15 +114,10 @@ namespace PicoGraffiti.UI
             count = 0;
             for (var x = 0.0f; x < width; x+=wSplit)
             {
-                var pos = x - offset;
+                var pos = x - offset - wSplit * 16;
                 while (pos < 0)
                 {
                     pos += width;
-                }
-                for (var i = 0; i < Height; i++)
-                {
-                    if(i % 2 == 0) continue;
-                    // Write((int)pos, i, _lineColorH);
                 }
                 if (count % 32 == 0)
                 {

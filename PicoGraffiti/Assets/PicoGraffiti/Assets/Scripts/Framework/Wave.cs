@@ -33,10 +33,13 @@ namespace PicoGraffiti.Framework
         {
             _trackId = trackId;
             _track = AppGlobal.Instance.ScoreRepository.Instance.Score.Tracks.FirstOrDefault(_ => _.Id == _trackId);
-            
+
             _rCounters = new[]
             {
-                new RCounter(this, 0, 1, 1),
+                new RCounter(this, 0, 1, 1.0f, 0.1),
+                new RCounter(this, 3, 2, 1.0f, -0.1),
+                new RCounter(this, 2, 3/2.0f, 1.0f, 0.2),
+                new RCounter(this, 1, 3, 1.0f, -0.2),
             };
         }
 
@@ -91,11 +94,17 @@ namespace PicoGraffiti.Framework
             foreach (var track in score.Tracks)
             {
                 var vol = 1.0f;
-                if (count == 0) vol = 3.0f;
-                if (count == 1) vol = 1.0f;
-                if (count == 6) vol = 2.0f;
-                if (count == 7) vol = 0.4f;
-                wave += track.Wave.Calc(track.GetNote(index), false, vol, track.ParentScore.Trans, ch == 0);
+                if (count == 0) vol = 8.0f;
+                if (count == 1) vol = 6.0f;
+                if (count == 2) vol = 6.0f;
+                if (count == 3) vol = 7.0f;
+                if (count == 4) vol = 3.0f;
+                if (count == 5) vol = 4.0f;
+                if (count == 6) vol = 15.0f;
+                if (count == 7) vol = 1.5f;
+                if (count == 8) vol = 1.5f;
+                
+                wave += track.Wave.Calc(track.GetNote(index), track.IsCode, vol, track.ParentScore.Trans, ch == 0);
                 count++;
             }
 
@@ -133,21 +142,23 @@ namespace PicoGraffiti.Framework
             private double _currentR = 0;
             private long _count = 0;
             private float _vol;
-            private int _rate;
+            private float _rate;
             private int _overrideCount = 0;
             private int _kickCount = 0;
             private int _chorusCount = 0;
             private int _attackCount = 0;
+            private double _pan = 0;
 
             private Wave _wave = null;
             private Track _track = null;
 
-            public RCounter(Wave wave, int index, int rate, float vol)
+            public RCounter(Wave wave, int index, float rate, float vol, double pan)
             {
                 _wave = wave;
                 _index = index;
                 _rate = rate;
                 _vol = vol;
+                _pan = pan;
 
                 _overrideCount = 0;
                 _kickCount = 0;
@@ -156,7 +167,7 @@ namespace PicoGraffiti.Framework
                 _track = _wave.Track;
             }
 
-            public float Calc(Wave wave, Note note, float vol, int trans, bool R)
+            public float Calc(Wave wave, Note note, float vol, int trans, bool R, float freqRate)
             {
                 // 音階周波数
                 if (note.WaveType == WaveType.Noise2 || note.WaveType == WaveType.Noise || _track.IsKick)
@@ -196,14 +207,24 @@ namespace PicoGraffiti.Framework
                 {
                     waveType = _track.SecondOverrideWaveType;
                     _overrideCount++;
-                } 
+                }
                 
                 // アタック
-                var attack = (float) (1 - _attackCount / ((float) SAMPLE_RATE * bpmRate * 80)) * 0.5f;
+                var attack = (float) (1 - _attackCount / ((float) SAMPLE_RATE * bpmRate * 80)) * 1.5f;
+                if (waveType == WaveType.Noise)
+                {
+                    attack = (float) (1 - _attackCount / ((float) SAMPLE_RATE * bpmRate * 50)) * 1.2f;
+                    attack *= 4;
+                }
+                else if (waveType == WaveType.Noise2)
+                {
+                    attack = (float) (1 - _attackCount / ((float) SAMPLE_RATE * bpmRate * 70)) * 1.2f;
+                    attack *= 4;
+                }
                 if (attack < 0) attack = 0;
                 vol *= 1.0f + attack;
                 _attackCount++;
-                
+
                 // 周波数Update
                 if (_count >= (long) _currentR)
                 {
@@ -214,7 +235,23 @@ namespace PicoGraffiti.Framework
 
                         if ((int) i % 2 == 0)
                         {
-                            r = r * 2;
+                            r = r * 2.01;
+                            if (R) vol *= 1.4f;
+                        }
+                        else
+                        {
+                            if (!R) vol *= 1.4f;
+                        }
+                    }
+
+                    if (_wave.Track.IsCode)
+                    {
+                        var len = bpmRate * SAMPLE_RATE * Model.Track.NOTE_GRID_SIZE;
+                        var i = _chorusCount / len / 8;
+
+                        if ((int) i % 2 == 0)
+                        {
+                            r = r * 2.01;
                             if (R) vol *= 1.4f;
                         }
                         else
@@ -229,15 +266,27 @@ namespace PicoGraffiti.Framework
                         var s = Mathf.Pow((float)t * 10, 2) * 500;
                         r += s;
                     }
-                    _currentR = r * _rate;
+                    _currentR = r / _rate / freqRate;
                     _count = 0;
                 }
                 else
                 {
                     _count++;
                 }
+                
+                // パン
+                vol *= 1.0f + (float)_track.Pan * (R ? 1 : -1) * 3;
+                vol *= 1.0f + (float)_pan * (R ? 1 : -1) * 3;
 
-                return wave.CalcWave(_currentR, _count, waveType, (float) note.Vol * 0.2f * _vol * vol * 1.6f);
+                if (_track.IsCode)
+                {
+                    vol *= 1.0f + (_index % 2 == 0 ? 1 : -1);
+                }
+                
+                // master
+                var masterVol = 0.13f;
+
+                return wave.CalcWave(_currentR, _count, waveType, (float) note.Vol * 0.2f * _vol * vol * masterVol);
             }
 
             public void ResetCount()
@@ -271,11 +320,13 @@ namespace PicoGraffiti.Framework
             {
                 if (_prevNote != null)
                 {
-                    _vol = (float) _prevNote.Vol * (_prevNote.WaveType == WaveType.Noise2 ? 0.5f : 1.0f); 
+                    _vol = (float) _prevNote.Vol * 
+                           (_prevNote.WaveType == WaveType.Noise2 ||
+                            _prevNote.WaveType == WaveType.Noise ? 0.7f : 1.0f); 
                 }
 
                 curNote = _currentNote;
-                _vol -= 0.000004f;
+                _vol -= 0.00001f;
                 if (_vol < 0)
                 {
                     _vol = 0;
@@ -301,9 +352,10 @@ namespace PicoGraffiti.Framework
             var count = 0;
             foreach (var rCounter in _rCounters)
             {
-                buf += rCounter.Calc(this, curNote, _vol * vol, trans, R);
+                buf += rCounter.Calc(this, curNote, _vol * vol, trans, R, 1 + count * 0.0001f);
 
                 count++;
+                if (count >= _track.Harmony) break;
             }
 
             _currentNote = curNote;
@@ -367,6 +419,7 @@ namespace PicoGraffiti.Framework
                 {
                     var t = count % r / r;
                     buff = GetPinkNoise(r, count, vol);
+                    buff += GetWhiteNoise(t, vol * 0.2f);
                     break;
                 }
 
@@ -411,9 +464,9 @@ namespace PicoGraffiti.Framework
             return _pinkNoiseBuff * vol;
         }
 
-        private bool isSharp(int melo)
+        public static bool isSharp(int melo)
         {
-            var sharp = new[] {false, true, false, true, false, false, true, false, true, false, true, false};
+            var sharp = new[] {false, true, false, true, false, true, true, false, true, false, true, true};
             return sharp[melo % sharp.Length];
         }
     }
